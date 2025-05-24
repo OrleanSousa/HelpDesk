@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store';
+import { addChamado } from '../features/chamadoSlice';
 
 interface ChamadoForm {
   titulo: string;
@@ -11,6 +12,7 @@ interface ChamadoForm {
 
 const NovoChamado = () => {
   const auth = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   const [form, setForm] = useState<ChamadoForm>({
     titulo: '',
     descricao: '',
@@ -30,13 +32,19 @@ const NovoChamado = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar a lógica de envio do chamado
-    console.log('Novo chamado:', {
-      ...form,
-      usuario: auth.user?.id,
+    if (!auth.user) return;
+    const novoChamado = {
+      id: Date.now().toString(),
+      titulo: form.titulo,
+      descricao: form.descricao,
       status: 'aberto',
-      dataCriacao: new Date().toISOString(),
-    });
+      prioridade: form.prioridade,
+      categoria: form.categoria,
+      dataCriacao: new Date().toISOString().slice(0, 10),
+      usuarioId: auth.user.id,
+    };
+    dispatch(addChamado(novoChamado));
+    setForm({ titulo: '', descricao: '', prioridade: 'media', categoria: '' });
   };
 
   // Classes condicionais baseadas no tipo de usuário

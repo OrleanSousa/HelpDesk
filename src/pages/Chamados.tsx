@@ -22,31 +22,29 @@ const Chamados = () => {
     categoria: '',
   });
 
-  // Dados simulados (substitua por dados reais da API)
-  const todosChamados: Chamado[] = [
-    {
-      id: '1',
-      titulo: 'Problema com impressora',
-      descricao: 'A impressora não está funcionando',
-      status: 'aberto',
-      prioridade: 'alta',
-      categoria: 'Impressora',
-      dataCriacao: '2024-03-15',
-      usuarioId: '123',
-    },
-    // Adicione mais chamados conforme necessário
-  ];
+  // Busca os chamados do Redux
+  const chamados = useSelector((state: RootState) => state.chamado.lista);
 
   // Filtra apenas os chamados do usuário atual (se não for admin)
   const chamadosFiltrados = auth.user?.isAdmin
-    ? todosChamados
-    : todosChamados.filter(chamado => chamado.usuarioId === auth.user?.id);
+    ? chamados
+    : chamados.filter(chamado => {
+        // Suporte para diferentes estruturas de usuário
+        if ('usuarioId' in chamado) {
+          return chamado.usuarioId === auth.user?.id;
+        }
+        if ('usuario' in chamado && chamado.usuario && 'id' in chamado.usuario) {
+          return chamado.usuario.id === auth.user?.id;
+        }
+        return false;
+      });
 
   // Aplica os filtros selecionados
   const chamadosFinal = chamadosFiltrados.filter(chamado => {
-    return (!filtro.status || chamado.status === filtro.status) &&
-           (!filtro.prioridade || chamado.prioridade === filtro.prioridade) &&
-           (!filtro.categoria || chamado.categoria === filtro.categoria);
+    const statusMatch = !filtro.status || chamado.status === filtro.status;
+    const prioridadeMatch = !filtro.prioridade || chamado.prioridade === filtro.prioridade;
+    const categoriaMatch = !filtro.categoria || chamado.categoria === filtro.categoria;
+    return statusMatch && prioridadeMatch && categoriaMatch;
   });
 
   // Classes condicionais baseadas no tipo de usuário
@@ -103,7 +101,7 @@ const Chamados = () => {
                   onChange={(e) => setFiltro({ ...filtro, categoria: e.target.value })}
                   className={selectClass}
                 >
-                  <option value="">Selecione uma categoria</option>
+                  <option value="">Todos</option>
                   <option value="Hardware">Hardware</option>
                   <option value="Software">Software</option>
                   <option value="Rede">Rede</option>
@@ -118,9 +116,9 @@ const Chamados = () => {
                   onChange={(e) => setFiltro({ ...filtro, status: e.target.value })}
                   className={selectClass}
                 >
-                  <option value="">Selecione um status</option>
+                  <option value="">Todos</option>
                   <option value="aberto">Aberto</option>
-                  <option value="em_andamento">Em Andamento</option>
+                  <option value="em_atendimento">Em Andamento</option>
                   <option value="fechado">Fechado</option>
                 </select>
 
@@ -129,7 +127,7 @@ const Chamados = () => {
                   onChange={(e) => setFiltro({ ...filtro, prioridade: e.target.value })}
                   className={selectClass}
                 >
-                  <option value="">Selecione a prioridade</option>
+                  <option value="">Todos</option> 
                   <option value="baixa">Baixa</option>
                   <option value="media">Média</option>
                   <option value="alta">Alta</option>
@@ -146,7 +144,7 @@ const Chamados = () => {
                       <th className={tableHeaderCellClass}>Status</th>
                       <th className={tableHeaderCellClass}>Prioridade</th>
                       <th className={tableHeaderCellClass}>Data</th>
-                      <th className={`${tableHeaderCellClass} text-center`}>Ações</th>
+                      <th className={tableHeaderCellClass + " text-center"}>Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -158,7 +156,7 @@ const Chamados = () => {
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                             chamado.status === 'aberto' 
                               ? 'bg-green-100 text-green-800' 
-                              : chamado.status === 'em_andamento'
+                              : chamado.status === 'em_atendimento'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-gray-100 text-gray-800'
                           }`}>
@@ -178,7 +176,7 @@ const Chamados = () => {
                         </td>
                         <td className={tableCellClass}>{chamado.dataCriacao}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                          <div className="flex justify-center space-x-2">
+                          <div className="flex justify-start space-x-2">
                             <button className="p-1 hover:bg-gray-100 rounded">
                               <FaEye className="text-gray-500 hover:text-gray-700" />
                             </button>
