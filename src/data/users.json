@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "nome": "Administrador",
+      "email": "admin@helpdesk.com",
+      "senha": "admin123",
+      "cargo": "Administrador",
+      "setor": "TI",
+      "isAdmin": true
+    },
+    {
+      "id": "2",
+      "nome": "Usuário Comum",
+      "email": "user@helpdesk.com",
+      "senha": "user123",
+      "cargo": "Analista",
+      "setor": "Suporte",
+      "isAdmin": false
+    },
+    {
+      "id": "3",
+      "nome": "Suporte TI",
+      "email": "suporte@helpdesk.com",
+      "senha": "123456",
+      "isAdmin": true,
+      "setor": "TI",
+      "cargo": "Suporte Técnico"
+    }
+  ]
+} 
