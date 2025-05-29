@@ -1,0 +1,50 @@
+{
+  "chamados": [
+    {
+      "id": "1748484317505",
+      "titulo": "teste de chamado",
+      "descricao": "preciso de ajuda",
+      "status": "aberto",
+      "prioridade": "alta",
+      "categoria": "Software",
+      "dataCriacao": "2025-05-29",
+      "usuarioId": "2",
+      "respostas": [
+        {
+          "autorId": "1",
+          "autorNome": "Administrador",
+          "mensagem": "112312312321",
+          "data": "2025-05-29T02:34:11.602Z"
+        }
+      ]
+    },
+    {
+      "id": "1748485460007",
+      "titulo": "13123123",
+      "descricao": "12312312",
+      "status": "aberto",
+      "prioridade": "baixa",
+      "categoria": "Email",
+      "dataCriacao": "2025-05-29",
+      "usuarioId": "2",
+      "respostas": [
+        {
+          "autorId": "1",
+          "autorNome": "Administrador",
+          "mensagem": "12312312312312",
+          "data": "2025-05-29T02:34:15.880Z"
+        }
+      ]
+    },
+    {
+      "id": "1748486542742",
+      "titulo": "Email",
+      "descricao": "tenho problemas em logar na minha conta corporativa.",
+      "status": "aberto",
+      "prioridade": "alta",
+      "categoria": "Email",
+      "dataCriacao": "2025-05-29",
+      "usuarioId": "2"
+    }
+  ]
+}

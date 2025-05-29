@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../store';
-import { addChamado } from '../features/chamadoSlice';
+import { toast } from 'react-toastify';
 
 interface ChamadoForm {
   titulo: string;
@@ -12,7 +14,7 @@ interface ChamadoForm {
 
 const NovoChamado = () => {
   const auth = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [form, setForm] = useState<ChamadoForm>({
     titulo: '',
     descricao: '',
@@ -30,9 +32,16 @@ const NovoChamado = () => {
     'Outros',
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.user) return;
+    if (!auth.user) {
+      toast.error('Usuário não autenticado!');
+      return;
+    }
+    if (!form.titulo || !form.descricao || !form.categoria) {
+      toast.error('Preencha todos os campos obrigatórios!');
+      return;
+    }
     const novoChamado = {
       id: Date.now().toString(),
       titulo: form.titulo,
@@ -43,8 +52,20 @@ const NovoChamado = () => {
       dataCriacao: new Date().toISOString().slice(0, 10),
       usuarioId: auth.user.id,
     };
-    dispatch(addChamado(novoChamado));
-    setForm({ titulo: '', descricao: '', prioridade: 'media', categoria: '' });
+    try {
+      await axios.post('http://localhost:3001/chamados', novoChamado);
+      setForm({ titulo: '', descricao: '', prioridade: 'media', categoria: '' });
+      toast.success('Chamado criado com sucesso!');
+      navigate('/chamados');
+    } catch (err: any) {
+      if (err.response) {
+        toast.error('Erro do servidor ao criar chamado!');
+      } else if (err.request) {
+        toast.error('Não foi possível conectar ao servidor!');
+      } else {
+        toast.error('Erro desconhecido ao criar chamado!');
+      }
+    }
   };
 
   // Classes condicionais baseadas no tipo de usuário
