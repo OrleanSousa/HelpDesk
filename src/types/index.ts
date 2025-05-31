@@ -10,6 +10,7 @@ export interface User {
   isAdmin: boolean;
   dataCadastro?: string;
   ultimoAcesso?: string;
+  foto?: string;
 }
 
 export interface Chamado {

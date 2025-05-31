@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import { FaEye, FaEdit, FaTrash, FaRegCommentDots } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 interface Chamado {
   id: string;
@@ -19,6 +20,7 @@ interface Chamado {
 
 const Chamados = () => {
   const auth = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
   const [filtro, setFiltro] = useState({
     status: '',
     prioridade: '',
@@ -268,7 +270,7 @@ const Chamados = () => {
                           <td className={tableCellClass}>{chamado.dataCriacao}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                             <div className="flex justify-start space-x-2">
-                              <button className="p-1 hover:bg-gray-100 rounded" onClick={() => openDetalhesModal(chamado)}>
+                              <button className="p-1 hover:bg-gray-100 rounded" onClick={() => navigate(`/chamados/${chamado.id}`)}>
                                 <FaEye className="text-gray-500 hover:text-gray-700" />
                               </button>
                               {auth.user?.isAdmin && (

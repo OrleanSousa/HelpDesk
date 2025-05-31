@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import { FaEdit, FaTrash, FaUserPlus } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface Usuario {
   id: string;
@@ -124,20 +125,15 @@ const ModalEditarUsuario: React.FC<ModalEditarUsuarioProps> = ({ usuario, isOpen
 const Usuarios = () => {
   const [modalUsuario, setModalUsuario] = useState<Usuario | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<Usuario | null>(null);
+  const [showModalExcluir, setShowModalExcluir] = useState(false);
+  const navigate = useNavigate();
 
-  // Dados simulados (substitua por dados reais da API)
-  const usuarios: Usuario[] = [
-    {
-      id: '1',
-      nome: 'João Silva',
-      email: 'joao@exemplo.com',
-      cargo: 'Analista',
-      setor: 'TI',
-      status: 'ativo',
-      dataCadastro: '2024-01-15',
-    },
-    // Adicione mais usuários conforme necessário
-  ];
+  useEffect(() => {
+    axios.get('http://localhost:3001/users')
+      .then(res => setUsuarios(res.data));
+  }, []);
 
   const handleEditarUsuario = (usuario: Usuario) => {
     setModalUsuario(usuario);
@@ -147,6 +143,14 @@ const Usuarios = () => {
   const handleSalvarUsuario = (usuarioAtualizado: Usuario) => {
     // Implemente a lógica de atualização do usuário aqui
     console.log('Usuário atualizado:', usuarioAtualizado);
+  };
+
+  const handleExcluirUsuario = async () => {
+    if (!usuarioParaExcluir) return;
+    await axios.delete(`http://localhost:3001/users/${usuarioParaExcluir.id}`);
+    setUsuarios(usuarios.filter(u => u.id !== usuarioParaExcluir.id));
+    setShowModalExcluir(false);
+    setUsuarioParaExcluir(null);
   };
 
   return (
@@ -185,26 +189,24 @@ const Usuarios = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.cargo}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.setor}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      usuario.status === 'ativo' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {usuario.status.toUpperCase()}
-                    </span>
+                    <select
+                      value={usuario.status}
+                      onChange={async (e) => {
+                        const novoStatus = e.target.value as 'ativo' | 'inativo';
+                        await axios.patch(`http://localhost:3001/users/${usuario.id}`, { status: novoStatus });
+                        setUsuarios(usuarios.map(u => u.id === usuario.id ? { ...u, status: novoStatus } : u));
+                      }}
+                      className={`px-2 py-1 text-xs font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${usuario.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                    >
+                      <option value="ativo">Ativo</option>
+                      <option value="inativo">Inativo</option>
+                    </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.dataCadastro}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.dataCadastro ? new Date(usuario.dataCadastro).toLocaleDateString() : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                     <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => handleEditarUsuario(usuario)}
-                        className="p-1 hover:bg-gray-600 rounded"
-                      >
-                        <FaEdit className="text-gray-300 hover:text-white" />
-                      </button>
-                      <button className="p-1 hover:bg-gray-600 rounded">
-                        <FaTrash className="text-gray-300 hover:text-white" />
-                      </button>
+                      <button onClick={() => navigate(`/usuarios/${usuario.id}/editar`)} className="p-1 hover:bg-gray-600 rounded"><FaEdit className="text-gray-300 hover:text-white" /></button>
+                      <button onClick={() => { setUsuarioParaExcluir(usuario); setShowModalExcluir(true); }} className="p-1 hover:bg-gray-600 rounded"><FaTrash className="text-gray-300 hover:text-white" /></button>
                     </div>
                   </td>
                 </tr>
@@ -221,6 +223,30 @@ const Usuarios = () => {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSalvarUsuario}
       />
+
+      {/* Modal de confirmação de exclusão */}
+      {showModalExcluir && usuarioParaExcluir && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md border border-gray-700">
+            <h2 className="text-xl font-bold text-white mb-4">Confirmar Exclusão</h2>
+            <p className="text-gray-300 mb-6">Tem certeza que deseja excluir o usuário <span className="font-semibold text-red-400">{usuarioParaExcluir.nome}</span>? Esta ação não poderá ser desfeita.</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setShowModalExcluir(false); setUsuarioParaExcluir(null); }}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleExcluirUsuario}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

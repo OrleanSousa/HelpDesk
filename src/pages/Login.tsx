@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../store/slices/authSlice';
-import usersData from '../data/users.json';
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,26 +12,25 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const user = usersData.users.find(
-      (u) => u.email === email && u.senha === senha
-    );
-
-    if (user) {
-      // Remove a senha antes de salvar no estado
-      const { senha: _, ...userWithoutPassword } = user;
-      dispatch(login(userWithoutPassword));
-
-      // Redireciona baseado no tipo de usuário
-      if (user.isAdmin) {
-        navigate('/dashboard');
+    try {
+      const res = await axios.get(`http://localhost:3001/users?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
+      const user = res.data[0];
+      if (user) {
+        const { senha: _, ...userWithoutPassword } = user;
+        dispatch(login(userWithoutPassword));
+        if (user.isAdmin) {
+          navigate('/dashboard');
+        } else {
+          navigate('/chamados');
+        }
       } else {
-        navigate('/chamados');
+        setError('Email ou senha inválidos');
       }
-    } else {
-      setError('Email ou senha inválidos');
+    } catch {
+      setError('Erro ao conectar ao servidor');
     }
   };
 

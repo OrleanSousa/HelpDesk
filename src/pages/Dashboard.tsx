@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import { FaTicketAlt, FaUsers, FaClock, FaChartLine } from 'react-icons/fa';
-import usersData from '../data/users.json';
 
 interface Chamado {
   id: string;
@@ -20,12 +19,19 @@ interface Chamado {
 const Dashboard = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    axios.get('http://localhost:3001/chamados')
-      .then(res => setChamados(res.data))
+    Promise.all([
+      axios.get('http://localhost:3001/chamados'),
+      axios.get('http://localhost:3001/users')
+    ])
+      .then(([chamadosRes, usersRes]) => {
+        setChamados(chamadosRes.data);
+        setUsuarios(usersRes.data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -35,12 +41,16 @@ const Dashboard = () => {
   const chamadosEncerrados = chamados.filter(c => c.status === 'fechado').length;
   const totalChamados = chamados.length;
 
+  // Contadores de usuários ativos e inativos
+  const usuariosAtivos = usuarios.filter(u => u.status === 'ativo').length;
+  const usuariosInativos = usuarios.filter(u => u.status === 'inativo').length;
+
   // Ordenar do mais recente para o mais antigo
   const chamadosOrdenados = [...chamados].sort((a, b) => b.dataCriacao.localeCompare(a.dataCriacao));
 
   // Função para buscar nome do usuário pelo id
   const getNomeUsuario = (id: string) => {
-    const user = usersData.users.find(u => String(u.id) === String(id));
+    const user = usuarios.find(u => String(u.id) === String(id));
     return user ? user.nome : id;
   };
 
@@ -70,32 +80,22 @@ const Dashboard = () => {
         </div>
 
         {/* Métricas Adicionais (mantidas como exemplo, mas pode remover se quiser) */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Usuários Ativos</h3>
-              <FaUsers className="text-2xl text-blue-500" />
+              <FaUsers className="text-2xl text-green-500" />
             </div>
-            <p className="text-3xl font-bold text-white">-</p>
+            <p className="text-3xl font-bold text-white">{usuariosAtivos}</p>
             <p className="text-sm text-gray-400 mt-2">Total de usuários ativos no sistema</p>
           </div>
-
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Tempo Médio de Resposta</h3>
-              <FaClock className="text-2xl text-yellow-500" />
+              <h3 className="text-lg font-semibold text-white">Usuários Inativos</h3>
+              <FaUsers className="text-2xl text-red-500" />
             </div>
-            <p className="text-3xl font-bold text-white">-</p>
-            <p className="text-sm text-gray-400 mt-2">Média de tempo para primeira resposta</p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Satisfação dos Usuários</h3>
-              <FaChartLine className="text-2xl text-green-500" />
-            </div>
-            <p className="text-3xl font-bold text-white">-</p>
-            <p className="text-sm text-gray-400 mt-2">Média de avaliações positivas</p>
+            <p className="text-3xl font-bold text-white">{usuariosInativos}</p>
+            <p className="text-sm text-gray-400 mt-2">Total de usuários inativos no sistema</p>
           </div>
         </div>
 

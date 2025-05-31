@@ -9,6 +9,8 @@ import NovoChamado from './pages/NovoChamado';
 import Usuarios from './pages/Usuarios';
 import Cadastro from './pages/Cadastro';
 import Perfil from './pages/Perfil';
+import DetalheChamado from './pages/DetalheChamado';
+import EditarUsuario from './pages/EditarUsuario';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -74,6 +76,16 @@ const App = () => {
             <Route path="perfil" element={
               <RequireAuth>
                 <Perfil />
+              </RequireAuth>
+            } />
+            <Route path="chamados/:id" element={
+              <RequireAuth>
+                <DetalheChamado />
+              </RequireAuth>
+            } />
+            <Route path="usuarios/:id/editar" element={
+              <RequireAuth>
+                <EditarUsuario />
               </RequireAuth>
             } />
           </Route>

@@ -20,6 +20,9 @@ const Sidebar = () => {
         { to: "/novo-chamado", icon: <FaPlus />, text: "Novo Chamado" },
       ];
 
+  const nomePerfil = auth.user?.nome || 'Usuário';
+  const fotoPerfil = auth.user?.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
   return (
     <div className="w-64 h-screen flex flex-col justify-between bg-gray-900 text-[#646cff] shrink-0 border-r border-gray-800 font-bold">
       <div className="flex flex-col">
@@ -27,12 +30,12 @@ const Sidebar = () => {
         <div className="p-6 text-center border-b border-gray-800">
           <div className="inline-block">
             <img
-              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+              src={fotoPerfil}
               alt="User"
-              className="w-20 h-20 rounded-full mb-3 border-2 border-gray-700 p-1"
+              className="w-20 h-20 rounded-full mb-3 border-2 border-gray-700 p-1 object-cover"
             />
           </div>
-          <h2 className="text-xl font-semibold text-white font-bold">{auth.user?.nome || 'Usuário'}</h2>
+          <h2 className="text-xl font-semibold text-white font-bold">{nomePerfil}</h2>
           <p className="text-sm text-white">{auth.user?.cargo}</p>
         </div>
 

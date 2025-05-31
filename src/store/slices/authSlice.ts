@@ -32,13 +32,27 @@ const authSlice = createSlice({
       }));
     },
     logout: (state) => {
+      // Salva nome e foto do último usuário no localStorage
+      if (state.user) {
+        localStorage.setItem('lastUserNome', state.user.nome || 'Usuário');
+        localStorage.setItem('lastUserFoto', state.user.foto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png');
+      }
       state.isAuthenticated = false;
       state.user = null;
       // Remove do localStorage
       localStorage.removeItem('authState');
     },
+    updateProfile: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+        localStorage.setItem('authState', JSON.stringify({
+          isAuthenticated: state.isAuthenticated,
+          user: state.user
+        }));
+      }
+    },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, updateProfile } = authSlice.actions;
 export default authSlice.reducer; 
