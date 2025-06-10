@@ -1,25 +1,28 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../store';
 import { toast } from 'react-toastify';
+import { createChamado } from '../services';
 
 interface ChamadoForm {
   titulo: string;
   descricao: string;
   prioridade: string;
   categoria: string;
+  ativo: boolean;
 }
 
 const NovoChamado = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+
   const [form, setForm] = useState<ChamadoForm>({
     titulo: '',
     descricao: '',
     prioridade: 'media',
     categoria: '',
+    ativo: true,
   });
 
   const categorias = [
@@ -42,19 +45,25 @@ const NovoChamado = () => {
       toast.error('Preencha todos os campos obrigatórios!');
       return;
     }
+
     const novoChamado = {
-      id: Date.now().toString(),
       titulo: form.titulo,
       descricao: form.descricao,
-      status: 'aberto',
       prioridade: form.prioridade,
       categoria: form.categoria,
-      dataCriacao: new Date().toISOString().slice(0, 10),
+      ativo: form.ativo,
       usuarioId: auth.user.id,
     };
+
     try {
-      await axios.post('http://localhost:3001/chamados', novoChamado);
-      setForm({ titulo: '', descricao: '', prioridade: 'media', categoria: '' });
+      await createChamado(novoChamado);
+      setForm({
+        titulo: '',
+        descricao: '',
+        prioridade: 'media',
+        categoria: '',
+        ativo: true,
+      });
       toast.success('Chamado criado com sucesso!');
       navigate('/chamados');
     } catch (err: any) {
@@ -68,24 +77,23 @@ const NovoChamado = () => {
     }
   };
 
-  // Classes condicionais baseadas no tipo de usuário
-  const containerClass = auth.user?.isAdmin
+  const containerClass = auth.user?.tipo === 'admin'
     ? "flex-1 min-h-screen bg-gray-900 p-6 flex items-center justify-center"
     : "flex-1 min-h-screen bg-gray-50 p-6 flex items-center justify-center";
 
-  const cardClass = auth.user?.isAdmin
+  const cardClass = auth.user?.tipo === 'admin'
     ? "w-full max-w-2xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden"
     : "w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden";
 
-  const headerClass = auth.user?.isAdmin
+  const headerClass = auth.user?.tipo === 'admin'
     ? "bg-blue-600 p-6"
     : "bg-blue-500 p-6";
 
-  const inputClass = auth.user?.isAdmin
+  const inputClass = auth.user?.tipo === 'admin'
     ? "w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
     : "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all";
 
-  const labelClass = auth.user?.isAdmin
+  const labelClass = auth.user?.tipo === 'admin'
     ? "block text-sm font-semibold text-gray-300 mb-2"
     : "block text-sm font-semibold text-gray-700 mb-2";
 
@@ -100,9 +108,7 @@ const NovoChamado = () => {
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div>
-            <label className={labelClass}>
-              Título
-            </label>
+            <label className={labelClass}>Título</label>
             <input
               type="text"
               value={form.titulo}
@@ -114,9 +120,7 @@ const NovoChamado = () => {
           </div>
 
           <div>
-            <label className={labelClass}>
-              Descrição
-            </label>
+            <label className={labelClass}>Descrição</label>
             <textarea
               value={form.descricao}
               onChange={(e) => setForm({ ...form, descricao: e.target.value })}
@@ -128,9 +132,7 @@ const NovoChamado = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>
-                Prioridade
-              </label>
+              <label className={labelClass}>Prioridade</label>
               <select
                 value={form.prioridade}
                 onChange={(e) => setForm({ ...form, prioridade: e.target.value })}
@@ -143,9 +145,7 @@ const NovoChamado = () => {
             </div>
 
             <div>
-              <label className={labelClass}>
-                Categoria
-              </label>
+              <label className={labelClass}>Categoria</label>
               <select
                 value={form.categoria}
                 onChange={(e) => setForm({ ...form, categoria: e.target.value })}
@@ -162,10 +162,30 @@ const NovoChamado = () => {
             </div>
           </div>
 
+          <div>
+            <label className={labelClass}>
+              <input
+                type="checkbox"
+                checked={form.ativo}
+                onChange={(e) => setForm({ ...form, ativo: e.target.checked })}
+                className="mr-2"
+              />
+              Ativo
+            </label>
+          </div>
+
           <div className="flex justify-end space-x-4 pt-6">
             <button
               type="button"
-              onClick={() => setForm({ titulo: '', descricao: '', prioridade: 'media', categoria: '' })}
+              onClick={() =>
+                setForm({
+                  titulo: '',
+                  descricao: '',
+                  prioridade: 'media',
+                  categoria: '',
+                  ativo: true,
+                })
+              }
               className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all transform hover:scale-105 hover:shadow-lg font-semibold text-sm uppercase tracking-wider"
             >
               Limpar
@@ -183,4 +203,4 @@ const NovoChamado = () => {
   );
 };
 
-export default NovoChamado; 
+export default NovoChamado;

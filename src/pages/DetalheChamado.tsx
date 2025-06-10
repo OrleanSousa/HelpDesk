@@ -1,27 +1,37 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { getChamado, getChamadoResponses } from '../services';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
-import { toast } from 'react-toastify';
+import ListaRespostas from '../components/ListaRespostas';
+import FormularioResposta from '../components/FormularioResposta';
 
 interface Resposta {
-  autorId: string;
-  autorNome: string;
+  id: number;
+  user_id: string;
+  usuario_nome?: string;
   mensagem: string;
-  data: string;
+  created_at: string;
+  anexos?: Array<{
+    id: number;
+    nome: string;
+    url: string;
+  }>;
 }
 
 interface Chamado {
-  id: string;
+  id: number;
   titulo: string;
   descricao: string;
   status: string;
   prioridade: string;
   categoria: string;
   dataCriacao: string;
-  usuarioId: string;
-  respostas?: Resposta[];
+  usuario: {
+    nome: string;
+    setor: string;
+  };
 }
 
 const DetalheChamado = () => {
@@ -29,122 +39,93 @@ const DetalheChamado = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const [chamado, setChamado] = useState<Chamado | null>(null);
-  const [resposta, setResposta] = useState('');
-  const [enviando, setEnviando] = useState(false);
+  const [respostas, setRespostas] = useState<Resposta[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchChamado = async () => {
     if (!id) return;
-    axios.get(`http://localhost:3001/chamados/${id}`)
-      .then(res => setChamado(res.data))
-      .catch(() => toast.error('Erro ao carregar chamado!'));
-  }, [id]);
-
-  const handleEnviarResposta = async () => {
-    if (!chamado || !auth.user) return;
-    setEnviando(true);
-    const novaResposta: Resposta = {
-      autorId: String(auth.user.id),
-      autorNome: auth.user.nome,
-      mensagem: resposta,
-      data: new Date().toISOString(),
-    };
-    const chamadoAtualizado = {
-      ...chamado,
-      respostas: [...(chamado.respostas || []), novaResposta],
-    };
     try {
-      await axios.put(`http://localhost:3001/chamados/${chamado.id}`, chamadoAtualizado);
-      setChamado(chamadoAtualizado);
-      setResposta('');
-      toast.success('Resposta enviada com sucesso!');
+      const response = await getChamado(id);
+      setChamado(response.data);
     } catch {
-      toast.error('Erro ao enviar resposta!');
+      // erro tratado silenciosamente ou por toast externo
     } finally {
-      setEnviando(false);
+      setLoading(false);
     }
   };
 
-  if (!chamado) {
+  const fetchRespostas = async () => {
+    if (!id) return;
+    try {
+      const response = await getChamadoResponses(id);
+      setRespostas(response.data);
+    } catch {
+      setRespostas([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchChamado();
+    fetchRespostas();
+  }, [id]);
+
+  if (loading || !chamado) {
     return <div className="flex-1 flex items-center justify-center min-h-screen">Carregando chamado...</div>;
   }
 
-  // Classes condicionais baseadas no tipo de usuário
-  const containerClass = auth.user?.isAdmin
-    ? "flex-1 min-h-screen bg-gray-900 p-6 flex items-center justify-center"
-    : "flex-1 min-h-screen bg-gray-100 p-6 flex items-center justify-center";
-
-  const cardClass = auth.user?.isAdmin
-    ? "w-full max-w-2xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden"
-    : "w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden";
-
-  const headerClass = auth.user?.isAdmin
-    ? "bg-gray-900 p-6"
-    : "bg-blue-500 p-6";
-
-  const labelClass = auth.user?.isAdmin
-    ? "text-gray-300"
-    : "text-gray-800";
-
-  const respostaBgClass = auth.user?.isAdmin
-    ? "bg-gray-700 text-white"
-    : "bg-gray-100 text-gray-800";
-
-  const textareaClass = auth.user?.isAdmin
-    ? "w-full border border-gray-300 rounded-lg px-4 py-2 mb-2 h-24 text-white bg-gray-700"
-    : "w-full border border-gray-300 rounded-lg px-4 py-2 mb-2 h-24 text-gray-800";
-
   return (
-    <div className={containerClass}>
-      <div className={cardClass}>
-        <div className={headerClass}>
-          <h2 className="text-3xl font-bold text-center text-white">Detalhes do Chamado</h2>
-        </div>
-        <div className="p-8 space-y-4">
-          <div className={labelClass}><b>Título:</b> {chamado.titulo}</div>
-          <div className={labelClass}><b>Descrição:</b> {chamado.descricao}</div>
-          <div className={labelClass}><b>Status:</b> {chamado.status}</div>
-          <div className={labelClass}><b>Prioridade:</b> {chamado.prioridade}</div>
-          <div className={labelClass}><b>Categoria:</b> {chamado.categoria}</div>
-          <div className={labelClass}><b>Data de Criação:</b> {chamado.dataCriacao}</div>
-          <div className={labelClass}>
-            <b>Respostas:</b>
-            <div className="space-y-3 mt-2">
-              {(chamado.respostas && chamado.respostas.length > 0) ? (
-                chamado.respostas.map((resp, idx) => (
-                  <div key={idx} className={`${respostaBgClass} rounded p-3`}>
-                    <div className="text-sm mb-1"><b>{resp.autorNome}</b> <span className="text-xs text-gray-400">{new Date(resp.data).toLocaleString()}</span></div>
-                    <div>{resp.mensagem}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500">Nenhuma resposta ainda.</div>
-              )}
+    <div className="flex-1 min-h-screen bg-gray-100 p-6 overflow-auto">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md">
+        <div className="p-6 border-b">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">{chamado.titulo}</h2>
+            <div className="flex gap-2">
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                chamado.prioridade === 'alta' ? 'bg-red-100 text-red-800' :
+                chamado.prioridade === 'media' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                {chamado.prioridade}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                chamado.status === 'aberto' ? 'bg-blue-100 text-blue-800' :
+                chamado.status === 'em_atendimento' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-green-100 text-green-800'
+              }`}>
+                {chamado.status}
+              </span>
             </div>
           </div>
-          {chamado.status !== 'fechado' && (
-            <div className="mt-4">
-              <textarea
-                className={textareaClass}
-                value={resposta}
-                onChange={e => setResposta(e.target.value)}
-                placeholder="Digite sua resposta..."
-                disabled={enviando}
-              />
-              <div className="flex justify-end gap-2">
-                <button onClick={() => navigate(-1)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-black">Voltar</button>
-                <button onClick={handleEnviarResposta} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" disabled={!resposta.trim() || enviando}>Enviar Resposta</button>
-              </div>
+          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>
+              <p><span className="font-semibold">Solicitante:</span> {chamado.usuario?.nome ?? 'N/A'}</p>
+<p><span className="font-semibold">Setor:</span> {chamado.usuario?.setor ?? 'N/A'}</p>
             </div>
-          )}
-          {chamado.status === 'fechado' && (
-            <div className="flex justify-end mt-4">
-              <button onClick={() => navigate(-1)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-black">Voltar</button>
+            <div>
+              <p><span className="font-semibold">Categoria:</span> {chamado.categoria}</p>
+              <p><span className="font-semibold">Data:</span> {new Date(chamado.dataCriacao).toLocaleString()}</p>
             </div>
-          )}
+          </div>
+          <div className="mt-4">
+            <p className="text-gray-700 whitespace-pre-line">{chamado.descricao}</p>
+          </div>
+        </div>
+
+        <div className="p-6 border-b">
+          <h3 className="text-lg font-semibold mb-4">Histórico de Respostas</h3>
+          <ListaRespostas respostas={respostas} />
+        </div>
+
+        {chamado.status !== 'fechado' && (
+          <FormularioResposta chamadoId={chamado.id} onRespostaEnviada={fetchRespostas} />
+        )}
+
+        <div className="flex justify-end p-6">
+          <button onClick={() => navigate(-1)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-black">Voltar</button>
         </div>
       </div>
     </div>
   );
 };
 
-export default DetalheChamado; 
+export default DetalheChamado;

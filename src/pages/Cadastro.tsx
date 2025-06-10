@@ -1,29 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { createUser } from '../services';
 
 interface NovoUsuario {
-  nome: string;
+  id: string;
+  name: string;
   email: string;
   senha: string;
   confirmarSenha: string;
   cargo: string;
   setor: string;
-  isAdmin: boolean;
+  tipo: string;
 }
 
 const Cadastro = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<NovoUsuario>({
-    nome: '',
+    id: '',
+    name: '',
     email: '',
     senha: '',
     confirmarSenha: '',
     cargo: '',
     setor: '',
-    isAdmin: false,
+    tipo: 'user',
   });
   const [showSenha, setShowSenha] = useState(false);
   const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
@@ -35,18 +37,18 @@ const Cadastro = () => {
       return;
     }
     const novoUsuario = {
-      id: Date.now().toString(),
-      nome: form.nome,
+      id: form.id,
+      name: form.name,
       email: form.email,
       senha: form.senha,
       cargo: form.cargo,
       setor: form.setor,
-      isAdmin: form.isAdmin,
-      dataCadastro: new Date().toISOString(),
+      tipo: form.tipo,
     };
     try {
-      await axios.post('http://localhost:3001/users', novoUsuario);
+      await createUser(novoUsuario);
       toast.success('Usuário cadastrado com sucesso!');
+      navigate('/usuarios');
     } catch (err) {
       toast.error('Erro ao cadastrar usuário!');
     }
@@ -68,8 +70,8 @@ const Cadastro = () => {
                 </label>
                 <input
                   type="text"
-                  value={form.nome}
-                  onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -169,16 +171,14 @@ const Cadastro = () => {
             </div>
 
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isAdmin"
-                checked={form.isAdmin}
-                onChange={(e) => setForm({ ...form, isAdmin: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isAdmin" className="ml-2 text-sm text-gray-300">
-                Usuário Administrador
-              </label>
+              <select
+                value={form.tipo}
+                onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="user">Usuário</option>
+                <option value="admin">Administrador</option>
+              </select>
             </div>
 
             <div className="flex justify-end space-x-3 pt-6">

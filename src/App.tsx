@@ -30,7 +30,7 @@ const App = () => {
     if (!auth.isAuthenticated) {
       return <Navigate to="/login" />;
     }
-    return auth.user?.isAdmin ? <Navigate to="/dashboard" /> : <Navigate to="/chamados" />;
+    return auth.user?.tipo === 'admin' ? <Navigate to="/dashboard" /> : <Navigate to="/chamados" />;
   };
 
   return (
@@ -50,7 +50,7 @@ const App = () => {
             {/* Rotas protegidas */}
             <Route path="dashboard" element={
               <RequireAuth>
-                {auth.user?.isAdmin ? <Dashboard /> : <Navigate to="/chamados" />}
+                {auth.user?.tipo === 'admin' ? <Dashboard /> : <Navigate to="/chamados" />}
               </RequireAuth>
             } />
             <Route path="chamados" element={
@@ -65,12 +65,12 @@ const App = () => {
             } />
             <Route path="usuarios" element={
               <RequireAuth>
-                {auth.user?.isAdmin ? <Usuarios /> : <Navigate to="/chamados" />}
+                {auth.user?.tipo === 'admin' ? <Usuarios /> : <Navigate to="/chamados" />}
               </RequireAuth>
             } />
             <Route path="cadastro" element={
               <RequireAuth>
-                {auth.user?.isAdmin ? <Cadastro /> : <Navigate to="/chamados" />}
+                {auth.user?.tipo === 'admin' ? <Cadastro /> : <Navigate to="/chamados" />}
               </RequireAuth>
             } />
             <Route path="perfil" element={

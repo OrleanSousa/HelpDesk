@@ -4,12 +4,13 @@ import type { RootState } from '../store';
 import { FaEnvelope, FaIdBadge, FaCalendar, FaTicketAlt, FaClock } from 'react-icons/fa';
 import axios from 'axios';
 import { updateProfile } from '../store/slices/authSlice';
+import { getChamados, updateUser } from '../services';
 
 const Perfil = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const [modalOpen, setModalOpen] = useState(false);
-  const [novoNome, setNovoNome] = useState(auth.user?.nome || '');
+  const [novoNome, setNovoNome] = useState(auth.user?.name || '');
   const [novaFoto, setNovaFoto] = useState<string | null>(auth.user?.foto || null);
 
   const [chamados, setChamados] = useState<any[]>([]);
@@ -17,7 +18,7 @@ const Perfil = () => {
   // Carregar chamados do usuário logado
   useEffect(() => {
     if (!auth.user) return;
-    axios.get('http://localhost:3001/chamados')
+    getChamados()
       .then(res => {
         const filtrados = res.data.filter((c: any) => String(c.usuarioId) === String(auth.user?.id));
         setChamados(filtrados);
@@ -41,17 +42,19 @@ const Perfil = () => {
 
   const handleSalvar = async () => {
     if (novoNome.trim() && auth.user) {
-      await axios.patch(`http://localhost:3001/users/${auth.user.id}`, {
-        nome: novoNome,
-        foto: novaFoto || undefined,
-      });
-
-      dispatch(updateProfile({
-        nome: novoNome,
-        foto: novaFoto || undefined,
-      }));
-
-      setModalOpen(false);
+      try {
+        await updateUser(auth.user.id, {
+          name: novoNome,
+          foto: novaFoto || undefined,
+        });
+        dispatch(updateProfile({
+          name: novoNome,
+          foto: novaFoto || undefined,
+        }));
+        setModalOpen(false);
+      } catch (err) {
+        alert('Erro ao atualizar perfil!');
+      }
     }
   };
 
@@ -62,17 +65,17 @@ const Perfil = () => {
     dataCadastro: '2023-12-01',        // Simulado
   };
 
-  const containerClass = auth.user?.isAdmin
+  const containerClass = auth.user?.tipo === 'admin'
     ? "flex-1 min-h-screen bg-gray-900 p-6"
     : "flex-1 min-h-screen bg-gray-100 p-6";
 
-  const cardClass = auth.user?.isAdmin
+  const cardClass = auth.user?.tipo === 'admin'
     ? "bg-gray-800 rounded-xl shadow-2xl overflow-hidden mb-6"
     : "bg-white rounded-xl shadow-2xl overflow-hidden mb-6";
 
-  const textClass = auth.user?.isAdmin ? "text-gray-300" : "text-gray-600";
-  const titleClass = auth.user?.isAdmin ? "text-white" : "text-gray-800";
-  const cardInfoClass = auth.user?.isAdmin ? "bg-gray-700" : "bg-gray-50";
+  const textClass = auth.user?.tipo === 'admin' ? "text-gray-300" : "text-gray-600";
+  const titleClass = auth.user?.tipo === 'admin' ? "text-white" : "text-gray-800";
+  const cardInfoClass = auth.user?.tipo === 'admin' ? "bg-gray-700" : "bg-gray-50";
 
   return (
     <div className={containerClass}>
@@ -84,7 +87,7 @@ const Perfil = () => {
             <button
               className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold shadow hover:bg-blue-100 transition absolute right-6"
               onClick={() => {
-                setNovoNome(auth.user?.nome || '');
+                setNovoNome(auth.user?.name || '');
                 setNovaFoto(auth.user?.foto || null);
                 setModalOpen(true);
               }}
@@ -102,7 +105,7 @@ const Perfil = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h3 className={`text-2xl font-bold ${titleClass}`}>{auth.user?.nome}</h3>
+              <h3 className={`text-2xl font-bold ${titleClass}`}>{auth.user?.name}</h3>
               <p className={textClass}>{auth.user?.cargo}</p>
             </div>
 

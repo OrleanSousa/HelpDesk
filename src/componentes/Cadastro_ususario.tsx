@@ -1,6 +1,7 @@
+import { cadastrarUsuario } from '@/features/userSlice'
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { cadastrarUsuario } from '../features/userslice'
+
 
 interface FormUsuario {
   nome: string

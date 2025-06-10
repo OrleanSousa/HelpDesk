@@ -1,13 +1,13 @@
 export interface User {
   id: string;
-  nome: string;
+  name: string;
   email: string;
   senha?: string;
   cpf?: string;
   celular?: string;
   setor: string;
   cargo: string;
-  isAdmin: boolean;
+  tipo: string;
   dataCadastro?: string;
   ultimoAcesso?: string;
   foto?: string;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../store/slices/authSlice';
-import axios from 'axios';
+import { login as loginAction } from '../store/slices/authSlice';
+import { login as loginApi } from '../services';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,23 +14,22 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError('');
     try {
-      const res = await axios.get(`http://localhost:3001/users?email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
-      const user = res.data[0];
-      if (user) {
-        const { senha: _, ...userWithoutPassword } = user;
-        dispatch(login(userWithoutPassword));
-        if (user.isAdmin) {
-          navigate('/dashboard');
-        } else {
-          navigate('/chamados');
-        }
+      const res = await loginApi({ email, password: senha });
+      const { user, token } = res.data;
+      dispatch(loginAction({ user, token }));
+      if (user.tipo === 'admin') {
+        navigate('/dashboard');
       } else {
-        setError('Email ou senha inválidos');
+        navigate('/chamados');
       }
-    } catch {
-      setError('Erro ao conectar ao servidor');
+    } catch (err: any) {
+      if (err.response && err.response.status === 401) {
+        setError('Email ou senha inválidos');
+      } else {
+        setError('Erro ao conectar ao servidor');
+      }
     }
   };
 

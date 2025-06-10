@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import { FaEye, FaEdit, FaTrash, FaRegCommentDots } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { getChamados, deleteChamado, updateChamado, createChamadoResponse } from '../services';
 
 interface Chamado {
   id: string;
@@ -19,7 +19,7 @@ interface Chamado {
 }
 
 const Chamados = () => {
-  const auth = useSelector((state: RootState) => state.auth);
+ const auth = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const [filtro, setFiltro] = useState({
     status: '',
@@ -37,20 +37,28 @@ const Chamados = () => {
   const [respostaDetalhe, setRespostaDetalhe] = useState('');
   const [enviandoResposta, setEnviandoResposta] = useState(false);
 
+ 
   useEffect(() => {
     setLoading(true);
-    axios.get('http://localhost:3001/chamados')
-      .then(res => setChamados(res.data))
+    getChamados()
+      .then(res => {
+        // Normaliza status e prioridade para minúsculo
+        const normalizados = res.data.map((c: Chamado) => ({
+          ...c,
+          status: c.status ? c.status.toLowerCase() : '',
+          prioridade: c.prioridade ? c.prioridade.toLowerCase() : '',
+          categoria: c.categoria,
+        }));
+        setChamados(normalizados);
+      })
       .catch(() => setError('Erro ao carregar chamados'))
       .finally(() => setLoading(false));
   }, []);
 
-  // Filtra apenas os chamados do usuário atual (se não for admin)
-  const chamadosFiltrados = auth.user?.isAdmin
+  const chamadosFiltrados = auth.user?.tipo === 'admin'
     ? chamados
     : chamados.filter(chamado => String(chamado.usuarioId) === String(auth.user?.id));
 
-  // Aplica os filtros selecionados
   const chamadosFinal = chamadosFiltrados.filter(chamado => {
     const statusMatch = !filtro.status || chamado.status === filtro.status;
     const prioridadeMatch = !filtro.prioridade || chamado.prioridade === filtro.prioridade;
@@ -58,44 +66,21 @@ const Chamados = () => {
     return statusMatch && prioridadeMatch && categoriaMatch;
   });
 
-  // Classes condicionais baseadas no tipo de usuário
-  const containerClass = auth.user?.isAdmin
-    ? "flex-1 bg-gray-900"
-    : "flex-1 bg-gray-50";
-
-  const cardClass = auth.user?.isAdmin
-    ? "bg-gray-800 rounded-lg overflow-hidden"
-    : "bg-white rounded-xl shadow-lg overflow-hidden";
-
-  const headerClass = auth.user?.isAdmin
-    ? "bg-gray-900 p-6"
-    : "bg-blue-500 p-6";
-
-  const tableHeaderClass = auth.user?.isAdmin
-    ? "bg-gray-700"
-    : "bg-gray-50";
-
-  const tableHeaderCellClass = auth.user?.isAdmin
-    ? "px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600"
-    : "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200";
-
-  const tableCellClass = auth.user?.isAdmin
-    ? "px-6 py-4 whitespace-nowrap text-sm text-white"
-    : "px-6 py-4 whitespace-nowrap text-sm text-gray-900";
-
-  const tableRowClass = auth.user?.isAdmin
-    ? "bg-gray-800 hover:bg-gray-700 transition-colors"
-    : "hover:bg-gray-50 transition-colors";
-
-  const selectClass = auth.user?.isAdmin
-    ? "bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-    : "bg-white text-gray-900 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm";
+  // Estilos escuros iguais ao print
+  const containerClass = "flex-1 bg-gray-900 min-h-screen";
+  const cardClass = "bg-gray-800 rounded-lg overflow-hidden";
+  const headerClass = "bg-gray-900 p-6";
+  const tableHeaderClass = "bg-gray-700";
+  const tableHeaderCellClass = "px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600";
+  const tableCellClass = "px-6 py-4 whitespace-nowrap text-sm text-white";
+  const tableRowClass = "bg-gray-800 hover:bg-gray-700 transition-colors";
+  const selectClass = "bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
   const handleDeleteChamado = async (id: string | number) => {
     if (!window.confirm('Tem certeza que deseja remover este chamado?')) return;
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:3001/chamados/${id}`);
+      await deleteChamado(id);
       setChamados(chamados.filter(c => c.id !== id));
       toast.success('Chamado removido com sucesso!');
     } catch (err) {
@@ -114,7 +99,7 @@ const Chamados = () => {
     if (!modalEdit.chamado) return;
     const novoChamado = { ...modalEdit.chamado, status: editStatus };
     try {
-      await axios.put(`http://localhost:3001/chamados/${modalEdit.chamado.id}`, novoChamado);
+      await updateChamado(novoChamado.id, novoChamado);
       setChamados(chamados.map(c => c.id === novoChamado.id ? novoChamado : c));
       toast.success('Chamado editado com sucesso!');
       setModalEdit({open: false, chamado: null});
@@ -123,20 +108,18 @@ const Chamados = () => {
     }
   };
 
-  const openRespostaModal = (chamado: Chamado) => {
-    setRespostaTexto('');
-    setModalResposta({open: true, chamado});
-  };
-
-  const handleEnviarResposta = () => {
-    // Aqui você pode futuramente fazer um POST/PUT para salvar a resposta
-    toast.success('Resposta enviada com sucesso!');
-    setModalResposta({open: false, chamado: null});
-  };
-
-  const openDetalhesModal = (chamado: Chamado) => {
-    setRespostaDetalhe('');
-    setModalDetalhes({open: true, chamado});
+  const handleEnviarResposta = async () => {
+    if (!modalResposta.chamado) return;
+    setEnviandoResposta(true);
+    try {
+      await createChamadoResponse({ chamadoId: modalResposta.chamado.id, mensagem: respostaTexto });
+      toast.success('Resposta enviada com sucesso!');
+      setModalResposta({open: false, chamado: null});
+    } catch {
+      toast.error('Erro ao enviar resposta!');
+    } finally {
+      setEnviandoResposta(false);
+    }
   };
 
   const handleEnviarRespostaDetalhe = async () => {
@@ -144,7 +127,7 @@ const Chamados = () => {
     setEnviandoResposta(true);
     const novaResposta = {
       autorId: String(auth.user.id),
-      autorNome: auth.user.nome,
+      autorNome: auth.user.name,
       mensagem: respostaDetalhe,
       data: new Date().toISOString(),
     };
@@ -153,8 +136,8 @@ const Chamados = () => {
       respostas: [...(modalDetalhes.chamado.respostas || []), novaResposta],
     };
     try {
-      await axios.put(`http://localhost:3001/chamados/${modalDetalhes.chamado.id}`, novoChamado);
-      const { data } = await axios.get('http://localhost:3001/chamados');
+      await updateChamado(modalDetalhes.chamado.id, novoChamado);
+      const { data } = await getChamados();
       setChamados(data);
       const chamadoAtualizado = data.find((c: Chamado) => c.id === novoChamado.id);
       setModalDetalhes({open: true, chamado: chamadoAtualizado});
@@ -167,29 +150,26 @@ const Chamados = () => {
     }
   };
 
-  if (loading) return <div className={containerClass}><div className="p-6">Carregando chamados...</div></div>;
+  if (loading) return <div className={containerClass}><div className="p-6 text-white">Carregando chamados...</div></div>;
   if (error) return <div className={containerClass}><div className="p-6 text-red-500">{error}</div></div>;
 
   return (
-    <div className={containerClass}>
+       <div className="flex-1 bg-gray-900 min-h-screen">
       <div className="p-6 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <div className={cardClass}>
-            <div className={headerClass}>
-              <h2 className={auth.user?.isAdmin ? "text-3xl font-bold text-left text-white border-none" : "text-3xl font-bold text-center text-white"}>
-                {auth.user?.isAdmin ? 'Todos os Chamados' : 'Meus Chamados'}
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
+            <div className="bg-gray-900 p-6">
+              <h2 className="text-3xl font-bold text-left text-white border-none">
+                {auth.user?.tipo === 'admin' ? 'Todos os Chamados' : 'Meus Chamados'}
               </h2>
             </div>
-
-            
-
             {/* Filtros */}
             <div className="p-6 space-y-6">
               <div className="flex flex-wrap gap-4">
                 <select
                   value={filtro.categoria}
                   onChange={(e) => setFiltro({ ...filtro, categoria: e.target.value })}
-                  className={selectClass}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Todos</option>
                   <option value="Hardware">Hardware</option>
@@ -200,34 +180,31 @@ const Chamados = () => {
                   <option value="Acesso">Acesso</option>
                   <option value="Outros">Outros</option>
                 </select>
-
                 <select
                   value={filtro.status}
                   onChange={(e) => setFiltro({ ...filtro, status: e.target.value })}
-                  className={selectClass}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Todos</option>
                   <option value="aberto">Aberto</option>
-                  <option value="em_atendimento">Em Andamento</option>
-                  <option value="fechado">Fechado</option>
+                  <option value="em_atendimento">Em Atendimento</option>
+                  <option value="encerrado">Concluído</option>
                 </select>
-
                 <select
                   value={filtro.prioridade}
                   onChange={(e) => setFiltro({ ...filtro, prioridade: e.target.value })}
-                  className={selectClass}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Todos</option> 
+                  <option value="">Todos</option>
                   <option value="baixa">Baixa</option>
                   <option value="media">Média</option>
                   <option value="alta">Alta</option>
                 </select>
               </div>
-
               {/* Tabela de Chamados */}
-              <div className="overflow-hidden rounded-lg border border-gray-200">
+              <div className="overflow-hidden rounded-lg border border-gray-700">
                 {chamadosFinal.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">Nenhum chamado encontrado.</div>
+                  <div className="p-8 text-center text-gray-400">Nenhum chamado encontrado.</div>
                 ) : (
                   <table className="w-full border-collapse">
                     <thead className={tableHeaderClass}>
@@ -240,46 +217,54 @@ const Chamados = () => {
                         <th className={tableHeaderCellClass + " text-center"}>Ações</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody>
                       {chamadosFinal.map((chamado) => (
                         <tr key={chamado.id} className={tableRowClass}>
                           <td className={tableCellClass}>{chamado.titulo}</td>
                           <td className={tableCellClass}>{chamado.categoria}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              chamado.status === 'aberto' 
-                                ? 'bg-green-100 text-green-800' 
-                                : chamado.status === 'em_atendimento'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-gray-100 text-gray-800'
+                          <td className={tableCellClass}>
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                              chamado.status === 'ABERTO'
+                                ? 'bg-green-600 bg-opacity-20 text-green-200'
+                                : chamado.status === 'EM_ATENDIMENTO'
+                                ? 'bg-yellow-600 bg-opacity-20 text-yellow-200'
+                                : 'bg-red-600 bg-opacity-20 text-red-200'
                             }`}>
-                              {chamado.status.toUpperCase()}
+                              {chamado.status === 'ABERTO'
+                                ? 'Ativo'
+                                : chamado.status === 'EM_ATENDIMENTO'
+                                ? 'Em Atendimento'
+                                : 'Inativo'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          <td className={tableCellClass}>
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                               chamado.prioridade === 'alta'
-                                ? 'bg-red-100 text-red-800'
+                                ? 'bg-red-600 bg-opacity-20 text-red-200'
                                 : chamado.prioridade === 'media'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-blue-100 text-blue-800'
+                                ? 'bg-yellow-600 bg-opacity-20 text-yellow-200'
+                                : 'bg-green-600 bg-opacity-20 text-green-200'
                             }`}>
-                              {chamado.prioridade.toUpperCase()}
+                              {chamado.prioridade === 'alta'
+                                ? 'Alta'
+                                : chamado.prioridade === 'media'
+                                ? 'Média'
+                                : 'Baixa'}
                             </span>
                           </td>
                           <td className={tableCellClass}>{chamado.dataCriacao}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                            <div className="flex justify-start space-x-2">
-                              <button className="p-1 hover:bg-gray-100 rounded" onClick={() => navigate(`/chamados/${chamado.id}`)}>
-                                <FaEye className="text-gray-500 hover:text-gray-700" />
+                          <td className={tableCellClass + " text-center"}>
+                            <div className="flex justify-center space-x-2">
+                              <button className="p-1 hover:bg-gray-700 rounded" onClick={() => navigate(`/chamados/${chamado.id}`)}>
+                                <FaEye className="text-gray-300 hover:text-blue-400" />
                               </button>
-                              {auth.user?.isAdmin && (
+                              {auth.user?.tipo === 'admin' && (
                                 <>
-                                  <button className="p-1 hover:bg-gray-100 rounded" onClick={() => openEditModal(chamado)}>
-                                    <FaEdit className="text-gray-500 hover:text-gray-700" />
+                                  <button className="p-1 hover:bg-gray-700 rounded" onClick={() => openEditModal(chamado)}>
+                                    <FaEdit className="text-gray-300 hover:text-yellow-400" />
                                   </button>
-                                  <button className="p-1 hover:bg-gray-100 rounded" onClick={() => handleDeleteChamado(chamado.id)}>
-                                    <FaTrash className="text-gray-500 hover:text-gray-700" />
+                                  <button className="p-1 hover:bg-gray-700 rounded" onClick={() => handleDeleteChamado(chamado.id)}>
+                                    <FaTrash className="text-gray-300 hover:text-red-400" />
                                   </button>
                                 </>
                               )}
@@ -295,6 +280,7 @@ const Chamados = () => {
           </div>
         </div>
       </div>
+      {/* Modais permanecem iguais */}
       {modalEdit.open && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
@@ -304,9 +290,9 @@ const Chamados = () => {
               value={editStatus}
               onChange={e => setEditStatus(e.target.value)}
             >
-              <option value="aberto">Aberto</option>
-              <option value="em_atendimento">Em Andamento</option>
-              <option value="fechado">Concluído</option>
+              <option value="ABERTO">Aberto</option>
+              <option value="EM_ATENDIMENTO">Em Atendimento</option>
+              <option value="ENCERRADO">Concluído</option>
             </select>
             <div className="flex justify-end gap-2">
               <button onClick={() => setModalEdit({open: false, chamado: null})} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
@@ -342,8 +328,18 @@ const Chamados = () => {
             <h2 className="text-2xl font-bold mb-2 text-black">Detalhes do Chamado</h2>
             <div className="mb-2"><b className="text-black">Título:</b> <span className="text-gray-800">{modalDetalhes.chamado.titulo}</span></div>
             <div className="mb-2"><b className="text-black">Descrição:</b> <span className="text-gray-800">{modalDetalhes.chamado.descricao}</span></div>
-            <div className="mb-2"><b className="text-black">Status:</b> <span className="text-gray-800">{modalDetalhes.chamado.status}</span></div>
-            <div className="mb-2"><b className="text-black">Prioridade:</b> <span className="text-gray-800">{modalDetalhes.chamado.prioridade}</span></div>
+            <div className="mb-2"><b className="text-black">Status:</b> <span className={
+              modalDetalhes.chamado.status === 'ABERTO'
+                ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold'
+                : modalDetalhes.chamado.status === 'EM_ATENDIMENTO'
+                ? 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold'
+                : 'bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold'
+            }>{
+              modalDetalhes.chamado.status === 'ABERTO' ? 'Aberto' :
+              modalDetalhes.chamado.status === 'EM_ATENDIMENTO' ? 'Em Atendimento' :
+              'Concluído'
+            }</span></div>
+            <div className="mb-2"><b className="text-black">Prioridade:</b> <span className="text-gray-800">{(modalDetalhes.chamado.prioridade || 'medio').toUpperCase()}</span></div>
             <div className="mb-2"><b className="text-black">Categoria:</b> <span className="text-gray-800">{modalDetalhes.chamado.categoria}</span></div>
             <div className="mb-2"><b className="text-black">Data de Criação:</b> <span className="text-gray-800">{modalDetalhes.chamado.dataCriacao}</span></div>
             <div className="mb-4"><b className="text-black">Respostas:</b></div>
@@ -359,7 +355,7 @@ const Chamados = () => {
                 <div className="text-gray-500">Nenhuma resposta ainda.</div>
               )}
             </div>
-            {modalDetalhes.chamado.status !== 'fechado' && (
+            {modalDetalhes.chamado.status !== 'ENCERRADO' && (
               <div className="mt-4">
                 <textarea
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-2 h-24 text-gray-800"
@@ -374,7 +370,7 @@ const Chamados = () => {
                 </div>
               </div>
             )}
-            {modalDetalhes.chamado.status === 'fechado' && (
+            {modalDetalhes.chamado.status === 'ENCERRADO' && (
               <div className="flex justify-end mt-4">
                 <button onClick={() => setModalDetalhes({open: false, chamado: null})} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-black">Fechar</button>
               </div>
@@ -386,4 +382,4 @@ const Chamados = () => {
   );
 };
 
-export default Chamados; 
+export default Chamados;

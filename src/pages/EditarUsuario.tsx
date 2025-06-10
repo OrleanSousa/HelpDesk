@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-toastify';
+import { getUser, updateUser} from '../services';
 
 interface Usuario {
   id: string;
-  nome: string;
+  name: string;
   email: string;
   senha: string;
   cargo: string;
   setor: string;
-  isAdmin: boolean;
+  tipo: string;
 }
 
 const EditarUsuario = () => {
@@ -22,18 +22,21 @@ const EditarUsuario = () => {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    axios.get(`http://localhost:3001/users/${id}`)
-      .then(res => setUsuario(res.data))
+    getUser(id)
+      .then(res => setUsuario({
+        ...res.data,
+        senha: res.data.senha ?? ''
+      }))
       .catch(() => toast.error('Erro ao carregar usuário!'))
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!usuario) return;
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
     setUsuario({
       ...usuario,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     });
   };
 
@@ -41,7 +44,7 @@ const EditarUsuario = () => {
     e.preventDefault();
     if (!usuario) return;
     try {
-      await axios.put(`http://localhost:3001/users/${usuario.id}`, usuario);
+      await updateUser(usuario.id, usuario);
       toast.success('Usuário atualizado com sucesso!');
       navigate('/usuarios');
     } catch {
@@ -65,7 +68,7 @@ const EditarUsuario = () => {
             <input
               type="text"
               name="nome"
-              value={usuario.nome}
+              value={usuario.name}
               onChange={handleChange}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               required
@@ -115,15 +118,18 @@ const EditarUsuario = () => {
               required
             />
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="isAdmin"
-              checked={usuario.isAdmin}
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">Tipo</label>
+            <select
+              name="tipo"
+              value={usuario.tipo}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
-            />
-            <label className="text-sm text-gray-300">Administrador</label>
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              required
+            >
+              <option value="user">Usuário</option>
+              <option value="admin">Administrador</option>
+            </select>
           </div>
           <div className="flex justify-end gap-2 pt-6">
             <button

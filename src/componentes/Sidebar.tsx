@@ -3,13 +3,23 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store';
 import {  FaTicketAlt, FaPlus, FaUser, FaUsers, FaChartBar } from 'react-icons/fa';
 import { RiLogoutBoxFill } from "react-icons/ri";
-import { logout } from '../store/slices/authSlice';
+import { logout as logoutAction } from '../store/slices/authSlice';
+import { logout as logoutApi } from '../services';
 
 const Sidebar = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
-  const menuItems = auth.user?.isAdmin 
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (e) {
+      // Ignora erro de logout na API
+    }
+    dispatch(logoutAction());
+  };
+
+  const menuItems = auth.user?.tipo === 'admin'
     ? [
         { to: "/dashboard", icon: <FaChartBar />, text: "Dashboard" },
         { to: "/usuarios", icon: <FaUsers />, text: "Usuários" },
@@ -20,7 +30,7 @@ const Sidebar = () => {
         { to: "/novo-chamado", icon: <FaPlus />, text: "Novo Chamado" },
       ];
 
-  const nomePerfil = auth.user?.nome || 'Usuário';
+  const nomePerfil = auth.user?.name || 'Usuário';
   const fotoPerfil = auth.user?.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
   return (
@@ -35,7 +45,7 @@ const Sidebar = () => {
               className="w-20 h-20 rounded-full mb-3 border-2 border-gray-700 p-1 object-cover"
             />
           </div>
-          <h2 className="text-xl font-semibold text-white font-bold">{nomePerfil}</h2>
+          <h2 className="text-xl  text-white font-bold">{nomePerfil}</h2>
           <p className="text-sm text-white">{auth.user?.cargo}</p>
         </div>
 
@@ -67,7 +77,7 @@ const Sidebar = () => {
           Meu Perfil
         </Link>
         <button
-          onClick={() => dispatch(logout())}
+          onClick={handleLogout}
           className="flex items-center justify-center w-8 h-8 text-[#646cff] rounded-lg hover:bg-[#646cf0] hover:text-white transition-all"
           title="Sair"
         >

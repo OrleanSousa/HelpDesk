@@ -1,156 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import { useEffect, useState } from 'react';
+import { deleteUser, getUsers, updateUser } from '@/services';
+
 import { FaEdit, FaTrash, FaUserPlus } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 interface Usuario {
   id: string;
-  nome: string;
+  name: string;
   email: string;
   cargo: string;
   setor: string;
-  status: 'ativo' | 'inativo';
-  dataCadastro: string;
+  status: string;
+  tipo: string;
 }
 
-interface ModalEditarUsuarioProps {
-  usuario: Usuario | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (usuario: Usuario) => void;
-}
+const Usuarios = () => {
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<Usuario | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const usuariosPorPagina = 10;
+ 
 
-const ModalEditarUsuario: React.FC<ModalEditarUsuarioProps> = ({ usuario, isOpen, onClose, onSave }) => {
-  const [form, setForm] = useState<Usuario | null>(usuario);
+  useEffect(() => {
+    const carregarUsuarios = async () => {
+      const resposta = await getUsers();
+      // Garante que todos os usuários tenham o campo status
+      const users = Array.isArray(resposta.data) ? resposta.data.map((u: any) => ({ ...u, status: u.status ?? '' })) : [];
+      setUsuarios(users);
+    };
+    carregarUsuarios();
+  }, []);
 
-  if (!isOpen || !form) return null;
+  // Paginação
+  const indexUltimoUsuario = paginaAtual * usuariosPorPagina;
+  const indexPrimeiroUsuario = indexUltimoUsuario - usuariosPorPagina;
+  const usuariosPaginados = usuarios.slice(indexPrimeiroUsuario, indexUltimoUsuario);
+  const totalPaginas = Math.ceil(usuarios.length / usuariosPorPagina);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form) {
-      onSave(form);
-      onClose();
+  const handleAbrirModal = (usuario: Usuario) => {
+    setUsuarioSelecionado(usuario);
+    setModalAberto(true);
+  };
+
+  const handleDeletarUsuario = async (id: string) => {
+    try {
+      await deleteUser(id);
+      setUsuarios(usuarios.filter(u => u.id !== id));
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      {/* Overlay com animação */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+  const handleSalvarUsuario = async () => {
+    if (!usuarioSelecionado) return;
 
-      <div className="flex items-center justify-center min-h-screen p-4 text-center">
-        {/* Hack para centralização vertical */}
-        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    try {
+      const dadosAtualizados = {
+        name: usuarioSelecionado.name,
+        email: usuarioSelecionado.email,
+        cargo: usuarioSelecionado.cargo,
+        setor: usuarioSelecionado.setor,
+        status: usuarioSelecionado.status,
+        tipo: usuarioSelecionado.tipo,
+      };
 
-        {/* Modal com animação */}
-        <div className="relative inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="p-6 pb-4 border-b border-gray-700">
-            <h2 className="text-2xl font-bold text-white">Editar Usuário</h2>
-          </div>
+      await updateUser(usuarioSelecionado.id, dadosAtualizados);
 
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Nome</label>
-                <input
-                  type="text"
-                  value={form.nome}
-                  onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Cargo</label>
-                <input
-                  type="text"
-                  value={form.cargo}
-                  onChange={(e) => setForm({ ...form, cargo: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Setor</label>
-                <input
-                  type="text"
-                  value={form.setor}
-                  onChange={(e) => setForm({ ...form, setor: e.target.value })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
-                <select
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value as 'ativo' | 'inativo' })}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="ativo">Ativo</option>
-                  <option value="inativo">Inativo</option>
-                </select>
-              </div>
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Salvar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Usuarios = () => {
-  const [modalUsuario, setModalUsuario] = useState<Usuario | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<Usuario | null>(null);
-  const [showModalExcluir, setShowModalExcluir] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    axios.get('http://localhost:3001/users')
-      .then(res => setUsuarios(res.data));
-  }, []);
-
-  const handleEditarUsuario = (usuario: Usuario) => {
-    setModalUsuario(usuario);
-    setIsModalOpen(true);
-  };
-
-  const handleSalvarUsuario = (usuarioAtualizado: Usuario) => {
-    // Implemente a lógica de atualização do usuário aqui
-    console.log('Usuário atualizado:', usuarioAtualizado);
-  };
-
-  const handleExcluirUsuario = async () => {
-    if (!usuarioParaExcluir) return;
-    await axios.delete(`http://localhost:3001/users/${usuarioParaExcluir.id}`);
-    setUsuarios(usuarios.filter(u => u.id !== usuarioParaExcluir.id));
-    setShowModalExcluir(false);
-    setUsuarioParaExcluir(null);
+      setUsuarios(usuarios.map(u => u.id === usuarioSelecionado.id ? usuarioSelecionado : u));
+      setModalAberto(false);
+      setUsuarioSelecionado(null);
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+    }
   };
 
   return (
@@ -166,8 +88,6 @@ const Usuarios = () => {
             Novo Usuário
           </Link>
         </div>
-
-        {/* Tabela de Usuários */}
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
@@ -177,71 +97,149 @@ const Usuarios = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600">Cargo</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600">Setor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600">Data Cadastro</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-600">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-600">
-              {usuarios.map((usuario) => (
+              {usuariosPaginados.map((usuario) => (
                 <tr key={usuario.id} className="bg-gray-800 hover:bg-gray-700 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.nome}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.cargo}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.setor}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                     <select
                       value={usuario.status}
                       onChange={async (e) => {
-                        const novoStatus = e.target.value as 'ativo' | 'inativo';
-                        await axios.patch(`http://localhost:3001/users/${usuario.id}`, { status: novoStatus });
-                        setUsuarios(usuarios.map(u => u.id === usuario.id ? { ...u, status: novoStatus } : u));
+                        const novoStatus = e.target.value;
+                        try {
+                          await updateUser(usuario.id, { status: novoStatus } as Partial<Usuario>);
+                          setUsuarios(usuarios.map(u => u.id === usuario.id ? { ...u, status: novoStatus } : u));
+                        } catch (error) {
+                          console.error('Erro ao atualizar status:', error);
+                        }
                       }}
-                      className={`px-2 py-1 text-xs font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${usuario.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                      className={`px-2 py-1 text-xs font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500
+                        ${usuario.status && usuario.status.trim().toLowerCase() === 'ativo'
+                          ? 'bg-green-100 text-green-800 border border-green-400'
+                          : 'bg-red-100 text-red-800 border border-red-400'}`}
                     >
                       <option value="ativo">Ativo</option>
                       <option value="inativo">Inativo</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.dataCadastro ? new Date(usuario.dataCadastro).toLocaleDateString() : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                     <div className="flex justify-center space-x-2">
-                      <button onClick={() => navigate(`/usuarios/${usuario.id}/editar`)} className="p-1 hover:bg-gray-600 rounded"><FaEdit className="text-gray-300 hover:text-white" /></button>
-                      <button onClick={() => { setUsuarioParaExcluir(usuario); setShowModalExcluir(true); }} className="p-1 hover:bg-gray-600 rounded"><FaTrash className="text-gray-300 hover:text-white" /></button>
+                      <button onClick={() => handleAbrirModal(usuario)} className="p-1 hover:bg-gray-600 rounded"><FaEdit className="text-gray-300 hover:text-white" /></button>
+                      <button onClick={() => handleDeletarUsuario(usuario.id)} className="p-1 hover:bg-gray-600 rounded"><FaTrash className="text-gray-300 hover:text-white" /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {/* Paginação UX/UI melhorada */}
+          {totalPaginas > 1 && (
+            <div
+              className="flex justify-center items-center gap-4 px-6 py-4 border-t border-gray-700 bg-gray-800 rounded-b-lg"
+              style={{ minHeight: '64px' }}
+            >
+              <button
+                onClick={() => setPaginaAtual((prev) => Math.max(prev - 1, 1))}
+                disabled={paginaAtual === 1}
+                className={`px-4 py-2 rounded transition-colors duration-150 font-semibold text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  paginaAtual === 1
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                Anterior
+              </button>
+              <span className="text-white font-medium text-base select-none">
+                Página {paginaAtual} de {totalPaginas}
+              </span>
+              <button
+                onClick={() => setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))}
+                disabled={paginaAtual === totalPaginas}
+                className={`px-4 py-2 rounded transition-colors duration-150 font-semibold text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  paginaAtual === totalPaginas
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                Próxima
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Modal de Edição */}
-      <ModalEditarUsuario
-        usuario={modalUsuario}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSalvarUsuario}
-      />
-
-      {/* Modal de confirmação de exclusão */}
-      {showModalExcluir && usuarioParaExcluir && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md border border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-4">Confirmar Exclusão</h2>
-            <p className="text-gray-300 mb-6">Tem certeza que deseja excluir o usuário <span className="font-semibold text-red-400">{usuarioParaExcluir.nome}</span>? Esta ação não poderá ser desfeita.</p>
-            <div className="flex justify-end gap-2">
+      {modalAberto && usuarioSelecionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-gray-800 rounded-lg p-8 w-full max-w-md shadow-xl border border-gray-700">
+            <h2 className="text-xl font-bold mb-6 text-white">Editar Usuário</h2>
+            <div className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Nome"
+                value={usuarioSelecionado.name ?? ""}
+                onChange={e => setUsuarioSelecionado({ ...usuarioSelecionado, name: e.target.value })}
+                className="border border-gray-600 rounded px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={usuarioSelecionado.email ?? ""}
+                onChange={e => setUsuarioSelecionado({ ...usuarioSelecionado, email: e.target.value })}
+                className="border border-gray-600 rounded px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="Cargo"
+                value={usuarioSelecionado.cargo ?? ""}
+                onChange={e => setUsuarioSelecionado({ ...usuarioSelecionado, cargo: e.target.value })}
+                className="border border-gray-600 rounded px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <input
+                type="text"
+                placeholder="Setor"
+                value={usuarioSelecionado.setor ?? ""}
+                onChange={e => setUsuarioSelecionado({ ...usuarioSelecionado, setor: e.target.value })}
+                className="border border-gray-600 rounded px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <select
+                value={usuarioSelecionado.status ?? ""}
+                onChange={e => setUsuarioSelecionado({ ...usuarioSelecionado, status: e.target.value })}
+                className="border border-gray-600 rounded px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+              </select>
+              <select
+                value={usuarioSelecionado.tipo ?? "usuario"}
+                onChange={e => setUsuarioSelecionado({ ...usuarioSelecionado, tipo: e.target.value })}
+                className="border border-gray-600 rounded px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="admin">Administrador</option>
+                <option value="usuario">Usuário</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-4 mt-8">
               <button
-                onClick={() => { setShowModalExcluir(false); setUsuarioParaExcluir(null); }}
+                onClick={() => {
+                  setModalAberto(false);
+                  setUsuarioSelecionado(null);
+                }}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleExcluirUsuario}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold"
+                onClick={handleSalvarUsuario}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-semibold"
               >
-                Excluir
+                Salvar
               </button>
             </div>
           </div>
