@@ -46,6 +46,7 @@ const NovoChamado = () => {
       data_abertura: new Date().toISOString().slice(0, 10),
     };
 
+  
     try {
       await createChamado(novoChamado);
       setForm({
@@ -101,6 +102,7 @@ const NovoChamado = () => {
           <div>
             <label className={labelClass}>Título</label>
             <input
+            id='Titulo'
               type="text"
               value={form.titulo}
               onChange={(e) => setForm({ ...form, titulo: e.target.value })}
@@ -113,6 +115,7 @@ const NovoChamado = () => {
           <div>
             <label className={labelClass}>Descrição</label>
             <textarea
+            id='Descricao'
               value={form.descricao}
               onChange={(e) => setForm({ ...form, descricao: e.target.value })}
               className={`${inputClass} h-32 resize-none`}
@@ -125,8 +128,9 @@ const NovoChamado = () => {
             <div>
               <label className={labelClass}>Prioridade</label>
               <select
+              id='Prioridade'
                 value={form.prioridade}
-                onChange={e => setForm({ ...form, prioridade: e.target.value })}
+                onChange={(e) => setForm({ ...form, prioridade: e.target.value })}
                 className={inputClass}
               >
                 <option value="baixo">Baixa</option>
@@ -138,6 +142,7 @@ const NovoChamado = () => {
             <div>
               <label className={labelClass}>Categoria</label>
               <select
+              id='assunto'
                 value={form.assunto}
                 onChange={e => setForm({ ...form, assunto: e.target.value })}
                 className={inputClass}
