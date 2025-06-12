@@ -8,9 +8,9 @@ import { createChamado } from '../services';
 interface ChamadoForm {
   titulo: string;
   descricao: string;
+  status: string;
   prioridade: string;
-  categoria: string;
-  ativo: boolean;
+  assunto: string;
 }
 
 const NovoChamado = () => {
@@ -20,20 +20,10 @@ const NovoChamado = () => {
   const [form, setForm] = useState<ChamadoForm>({
     titulo: '',
     descricao: '',
-    prioridade: 'media',
-    categoria: '',
-    ativo: true,
+    status: 'ABERTO',
+    prioridade: 'baixo',
+    assunto: '',
   });
-
-  const categorias = [
-    'Hardware',
-    'Software',
-    'Rede',
-    'Impressora',
-    'Email',
-    'Acesso',
-    'Outros',
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +31,7 @@ const NovoChamado = () => {
       toast.error('Usuário não autenticado!');
       return;
     }
-    if (!form.titulo || !form.descricao || !form.categoria) {
+    if (!form.titulo || !form.descricao || !form.assunto) {
       toast.error('Preencha todos os campos obrigatórios!');
       return;
     }
@@ -50,9 +40,10 @@ const NovoChamado = () => {
       titulo: form.titulo,
       descricao: form.descricao,
       prioridade: form.prioridade,
-      categoria: form.categoria,
-      ativo: form.ativo,
-      usuarioId: auth.user.id,
+      assunto: form.assunto,
+      status: form.status,
+      user_id: auth.user.id,
+      data_abertura: new Date().toISOString().slice(0, 10),
     };
 
     try {
@@ -60,9 +51,9 @@ const NovoChamado = () => {
       setForm({
         titulo: '',
         descricao: '',
-        prioridade: 'media',
-        categoria: '',
-        ativo: true,
+        status: '',
+        prioridade: '',
+        assunto: '',
       });
       toast.success('Chamado criado com sucesso!');
       navigate('/chamados');
@@ -135,43 +126,33 @@ const NovoChamado = () => {
               <label className={labelClass}>Prioridade</label>
               <select
                 value={form.prioridade}
-                onChange={(e) => setForm({ ...form, prioridade: e.target.value })}
+                onChange={e => setForm({ ...form, prioridade: e.target.value })}
                 className={inputClass}
               >
-                <option value="baixa">Baixa</option>
-                <option value="media">Média</option>
-                <option value="alta">Alta</option>
+                <option value="baixo">Baixa</option>
+                <option value="medio">Média</option>
+                <option value="alto">Alta</option>
               </select>
             </div>
 
             <div>
               <label className={labelClass}>Categoria</label>
               <select
-                value={form.categoria}
-                onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+                value={form.assunto}
+                onChange={e => setForm({ ...form, assunto: e.target.value })}
                 className={inputClass}
                 required
               >
-                <option value="">Selecione uma categoria</option>
-                {categorias.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
+                <option value="">Selecione</option>
+                <option value="hardware">Hardware</option>
+                <option value="software">Software</option>
+                <option value="rede">Rede</option>
+                <option value="impressora">Impressora</option>
+                <option value="email">Email</option>
+                <option value="acesso">Acesso</option>
+                <option value="outros">Outros</option>
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>
-              <input
-                type="checkbox"
-                checked={form.ativo}
-                onChange={(e) => setForm({ ...form, ativo: e.target.checked })}
-                className="mr-2"
-              />
-              Ativo
-            </label>
           </div>
 
           <div className="flex justify-end space-x-4 pt-6">
@@ -181,9 +162,9 @@ const NovoChamado = () => {
                 setForm({
                   titulo: '',
                   descricao: '',
-                  prioridade: 'media',
-                  categoria: '',
-                  ativo: true,
+                  prioridade: '',
+                  status: '',
+                  assunto: '',
                 })
               }
               className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all transform hover:scale-105 hover:shadow-lg font-semibold text-sm uppercase tracking-wider"

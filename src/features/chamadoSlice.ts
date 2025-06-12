@@ -15,7 +15,7 @@ export interface Chamado {
   descricao: string;
   status: 'aberto' | 'em_atendimento' | 'resolvido';
   prioridade: 'baixa' | 'media' | 'alta';
-  categoria: string;
+  assunto: string;
   usuario: {
     id: string;
     nome: string;
