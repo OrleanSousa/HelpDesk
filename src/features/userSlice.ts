@@ -4,7 +4,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 interface Usuario {
   nome: string
   email: string
-  senha: string
+  password: string
   cpf: string
   celular: string
   setor: string

@@ -8,8 +8,8 @@ interface NovoUsuario {
   id: string;
   name: string;
   email: string;
-  senha: string;
-  confirmarSenha: string;
+  password: string;
+  confirmarPassword: string;
   cargo: string;
   setor: string;
   tipo: string;
@@ -21,18 +21,18 @@ const Cadastro = () => {
     id: '',
     name: '',
     email: '',
-    senha: '',
-    confirmarSenha: '',
+    password: '',
+    confirmarPassword: '',
     cargo: '',
     setor: '',
     tipo: 'user',
   });
-  const [showSenha, setShowSenha] = useState(false);
-  const [showConfirmarSenha, setShowConfirmarSenha] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmarPassword, setShowConfirmarPassworda] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.senha !== form.confirmarSenha) {
+    if (form.password !== form.confirmarPassword) {
       toast.error('As senhas não coincidem!');
       return;
     }
@@ -40,7 +40,7 @@ const Cadastro = () => {
       id: form.id,
       name: form.name,
       email: form.email,
-      senha: form.senha,
+      password: form.password,
       cargo: form.cargo,
       setor: form.setor,
       tipo: form.tipo,
@@ -96,19 +96,19 @@ const Cadastro = () => {
                 </label>
                 <div className="relative">
                 <input
-                    type={showSenha ? "text" : "password"}
-                  value={form.senha}
-                  onChange={(e) => setForm({ ...form, senha: e.target.value })}
+                    type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                 />
                   <button
                     type="button"
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    onClick={() => setShowSenha((v) => !v)}
+                    onClick={() => setShowPassword((v) => !v)}
                     tabIndex={-1}
                   >
-                    {showSenha ? <FaEyeSlash /> : <FaEye />}
+                    {showPassword? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
               </div>
@@ -119,22 +119,22 @@ const Cadastro = () => {
                 </label>
                 <div className="relative">
                 <input
-                    type={showConfirmarSenha ? "text" : "password"}
-                  value={form.confirmarSenha}
-                  onChange={(e) => setForm({ ...form, confirmarSenha: e.target.value })}
+                    type={showConfirmarPassword ? "text" : "password"}
+                  value={form.confirmarPassword}
+                  onChange={(e) => setForm({ ...form, confirmarPassword: e.target.value })}
                   required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                 />
                   <button
                     type="button"
                     className="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    onClick={() => setShowConfirmarSenha((v) => !v)}
+                    onClick={() => setShowConfirmarPassworda((v) => !v)}
                     tabIndex={-1}
                   >
-                    {showConfirmarSenha ? <FaEyeSlash /> : <FaEye />}
+                    {showConfirmarPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
-                  {form.confirmarSenha && (
-                    form.senha === form.confirmarSenha ? (
+                  {form.confirmarPassword && (
+                    form.password === form.confirmarPassword ? (
                       <FaCheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 text-green-500" />
                     ) : (
                       <FaTimesCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 text-red-500" />

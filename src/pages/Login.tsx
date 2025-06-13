@@ -6,7 +6,7 @@ import { login as loginApi } from '../services';
 
 const Login = () => {
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   
   const dispatch = useDispatch();
@@ -16,7 +16,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await loginApi({ email, password: senha });
+      const res = await loginApi({ email, password: password });
       const { user, token } = res.data;
       dispatch(loginAction({ user, token }));
       if (user.tipo === 'admin') {
@@ -79,8 +79,8 @@ const Login = () => {
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Senha"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>

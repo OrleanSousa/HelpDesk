@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux'
 interface FormUsuario {
   nome: string
   email: string
-  senha: string
+  password: string
   cpf: string
   celular: string
   setor: string
@@ -28,7 +28,7 @@ const CadastroUsuario = () => {
   const [form, setForm] = useState<FormUsuario>({
     nome: '',
     email: '',
-    senha: '',
+    password: '',
     cpf: '',
     celular: '',
     setor: '',
@@ -46,7 +46,7 @@ const CadastroUsuario = () => {
 
     if (!form.nome) novoErros.nome = 'Nome obrigatório'
     if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) novoErros.email = 'Email inválido'
-    if (!form.senha || form.senha.length < 6) novoErros.senha = 'Mínimo 6 caracteres'
+    if (!form.password || form.password.length < 6) novoErros.password = 'Mínimo 6 caracteres'
     if (cpfLimpo.length !== 11) novoErros.cpf = 'CPF deve ter 11 dígitos'
     if (celularLimpo.length !== 11) novoErros.celular = 'Celular deve ter 11 dígitos'
     if (!form.setor) novoErros.setor = 'Setor obrigatório'
@@ -77,7 +77,7 @@ const CadastroUsuario = () => {
       setForm({
         nome: '',
         email: '',
-        senha: '',
+        password: '',
         cpf: '',
         celular: '',
         setor: '',

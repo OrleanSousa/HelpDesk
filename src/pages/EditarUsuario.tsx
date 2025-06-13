@@ -7,7 +7,7 @@ interface Usuario {
   id: string;
   name: string;
   email: string;
-  senha: string;
+  password: string;
   cargo: string;
   setor: string;
   tipo: string;
@@ -25,7 +25,7 @@ const EditarUsuario = () => {
     getUser(id)
       .then(res => setUsuario({
         ...res.data,
-        senha: res.data.senha ?? ''
+        password: res.data.password ?? ''
       }))
       .catch(() => toast.error('Erro ao carregar usuário!'))
       .finally(() => setLoading(false));
@@ -90,7 +90,7 @@ const EditarUsuario = () => {
             <input
               type="password"
               name="senha"
-              value={usuario.senha}
+              value={usuario.password}
               onChange={handleChange}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               required
