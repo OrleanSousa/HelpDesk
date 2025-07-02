@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
 import { FaUsers } from 'react-icons/fa';
 import { getChamados, getUsers } from '../services';
 
@@ -17,7 +15,7 @@ interface Chamado {
 }
 
 const Dashboard = () => {
-  const auth = useSelector((state: RootState) => state.auth);
+  
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
