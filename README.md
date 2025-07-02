@@ -1,54 +1,102 @@
-# React + TypeScript + Vite
+# Sistema HelpDesk
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este projeto é composto por um frontend em **React + TypeScript + Vite** e um backend em **Laravel**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Pré-requisitos
 
-## Expanding the ESLint configuration
+- Node.js (recomendado: 18.x ou superior)
+- npm ou yarn
+- PHP (8.1 ou superior)
+- Composer
+- MySQL ou MariaDB
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Como rodar o Frontend
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1. **Acesse a pasta do frontend:**
+   ```sh
+   cd HelpDesk2/HelpDesk
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+2. **Instale as dependências:**
+   ```sh
+   npm install
+   ```
+   ou
+   ```sh
+   yarn
+   ```
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+3. **Inicie o servidor de desenvolvimento:**
+   ```sh
+   npm run dev
+   ```
+   ou
+   ```sh
+   yarn dev
+   ```
+
+4. **Acesse no navegador:**
+   ```
+   http://localhost:5173
+   ```
+   (ou a porta exibida no terminal)
+
+---
+
+## Como rodar o Backend (Laravel)
+
+1. **Acesse a pasta do backend:**
+   ```sh
+   cd sistema_helpdesk/sistema_helpdesk
+   ```
+
+2. **Instale as dependências:**
+   ```sh
+   composer install
+   ```
+
+3. **Configure o arquivo `.env`:**
+   - Copie `.env.example` para `.env`:
+     ```sh
+     cp .env.example .env
+     ```
+   - Edite o arquivo `.env` e configure o banco de dados e outras variáveis.
+
+4. **Gere a chave da aplicação:**
+   ```sh
+   php artisan key:generate
+   ```
+
+5. **Rode as migrations para criar as tabelas:**
+   ```sh
+   php artisan migrate
+   ```
+
+6. **(Opcional) Popule o banco com dados fake:**
+   ```sh
+   php artisan db:seed
+   ```
+
+7. **Inicie o servidor:**
+   ```sh
+   php artisan serve
+   ```
+   O backend estará disponível em `http://localhost:8000`
+
+---
+
+## Observações
+
+- Certifique-se de que o backend está rodando antes de iniciar o frontend.
+- Ajuste as URLs do frontend/backend conforme necessário.
+- O arquivo `.env` **não deve ser enviado para o repositório**.
+
+---
+
+## Contato
+
+Dúvidas ou sugestões? Abra uma issue ou entre em contato com o responsável pelo projeto.
