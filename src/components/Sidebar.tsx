@@ -1,15 +1,28 @@
 import { Link } from "react-router-dom"
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store';
-import {  FaTicketAlt, FaPlus, FaUser, FaUsers, FaChartBar } from 'react-icons/fa';
+import { FaTicketAlt, FaPlus, FaUser, FaUsers, FaChartBar } from 'react-icons/fa';
 import { RiLogoutBoxFill } from "react-icons/ri";
 import { logout as logoutAction } from '../store/slices/authSlice';
 import { logout as logoutApi } from '../services';
 
+/**
+ * Componente Sidebar
+ * 
+ * Exibe o menu lateral de navegação da aplicação.
+ * Mostra o perfil do usuário logado, opções de navegação (diferentes para admin e usuário comum)
+ * e botões para acessar o perfil e sair do sistema.
+ * 
+ * - Admins veem Dashboard, Usuários e Chamados.
+ * - Usuários comuns veem Meus Chamados e Novo Chamado.
+ * - O botão de logout encerra a sessão no backend e frontend.
+ */
 const Sidebar = () => {
+  // Obtém informações do usuário autenticado do Redux
   const auth = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
+  // Função para realizar logout (API e Redux)
   const handleLogout = async () => {
     try {
       await logoutApi();
@@ -19,6 +32,7 @@ const Sidebar = () => {
     dispatch(logoutAction());
   };
 
+  // Define os itens do menu conforme o tipo de usuário
   const menuItems = auth.user?.tipo === 'admin'
     ? [
         { to: "/dashboard", icon: <FaChartBar />, text: "Dashboard" },
@@ -30,6 +44,7 @@ const Sidebar = () => {
         { to: "/novo-chamado", icon: <FaPlus />, text: "Novo Chamado" },
       ];
 
+  // Nome e foto do usuário logado
   const nomePerfil = auth.user?.name || 'Usuário';
   const fotoPerfil = auth.user?.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 

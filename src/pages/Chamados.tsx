@@ -6,6 +6,9 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { getChamados, deleteChamado, updateChamado } from '../services';
 
+/**
+ * Interface que representa um chamado.
+ */
 interface Chamado {
   id: string;
   titulo: string;
@@ -17,20 +20,36 @@ interface Chamado {
   usuarioId: string;
 }
 
+/**
+ * Página de listagem e gerenciamento de chamados.
+ * 
+ * - Exibe todos os chamados (admin) ou apenas os do usuário logado.
+ * - Permite filtrar chamados por status, prioridade e assunto.
+ * - Permite visualizar, editar (admin) e excluir chamados.
+ * - Utiliza modal para edição rápida de status e prioridade.
+ */
 const Chamados = () => {
   const navigate = useNavigate();
   const auth = useSelector((state: RootState) => state.auth);
+
+  // Estado dos filtros de busca
   const [filtro, setFiltro] = useState({ status: '', prioridade: '', assunto: '' });
+  // Lista de chamados carregados
   const [chamados, setChamados] = useState<Chamado[]>([]);
+  // Estado de loading e erro
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Estado do modal de edição
   const [modalEdit, setModalEdit] = useState<{ open: boolean; chamado: Chamado | null }>({ open: false, chamado: null });
+  // Estado do status em edição
   const [editStatus, setEditStatus] = useState('');
 
+  // Carrega os chamados ao montar o componente
   useEffect(() => {
     setLoading(true);
     getChamados()
       .then(res => {
+        // Normaliza os campos para facilitar os filtros e exibição
         const normalizados = res.data.map((c: Chamado) => ({
           ...c,
           status: c.status?.toUpperCase() ?? '',
@@ -43,10 +62,12 @@ const Chamados = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  // Filtra chamados conforme o tipo de usuário (admin vê todos, usuário vê só os seus)
   const chamadosFiltrados = auth.user?.tipo === 'admin'
     ? chamados
     : chamados.filter(chamado => String(chamado.usuarioId) === String(auth.user?.id));
 
+  // Aplica filtros de status, prioridade e assunto
   const chamadosFinal = chamadosFiltrados.filter(chamado => {
     const statusMatch = filtro.status ? chamado.status === filtro.status.toUpperCase() : true;
     const prioridadeMatch = filtro.prioridade ? chamado.prioridade === filtro.prioridade.toLowerCase() : true;
@@ -54,6 +75,7 @@ const Chamados = () => {
     return statusMatch && prioridadeMatch && assuntoMatch;
   });
 
+  // Classes utilitárias para estilização
   const containerClass = "flex-1 bg-gray-900 min-h-screen";
   const cardClass = "bg-gray-800 rounded-lg overflow-hidden";
   const headerClass = "bg-gray-900 p-6";
@@ -63,6 +85,9 @@ const Chamados = () => {
   const tableRowClass = "bg-gray-800 hover:bg-gray-700 transition-colors";
   const selectClass = "bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
+  /**
+   * Remove um chamado após confirmação do usuário.
+   */
   const handleDeleteChamado = async (id: string | number) => {
     if (!window.confirm('Tem certeza que deseja remover este chamado?')) return;
     try {
@@ -77,11 +102,17 @@ const Chamados = () => {
     }
   };
 
+  /**
+   * Abre o modal de edição para um chamado selecionado.
+   */
   const openEditModal = (chamado: Chamado) => {
     setEditStatus(chamado.status);
     setModalEdit({ open: true, chamado });
   };
 
+  /**
+   * Salva as alterações de status e prioridade do chamado editado.
+   */
   const handleEditChamado = async () => {
     if (!modalEdit.chamado) return;
     const novoChamado = {
@@ -99,6 +130,7 @@ const Chamados = () => {
     }
   };
 
+  // Exibe carregamento ou erro, se necessário
   if (loading) return <div className={containerClass}><div className="p-6 text-white">Carregando chamados...</div></div>;
   if (error) return <div className={containerClass}><div className="p-6 text-red-500">{error}</div></div>;
 
@@ -113,7 +145,7 @@ const Chamados = () => {
               </h2>
             </div>
 
-            {/* Filtros */}
+            {/* Filtros de busca */}
             <div className="p-6 space-y-6">
               <div className="flex flex-wrap gap-4">
                 <select value={filtro.assunto} onChange={e => setFiltro({ ...filtro, assunto: e.target.value })} className={selectClass}>
@@ -163,6 +195,7 @@ const Chamados = () => {
                     <tr key={chamado.id} className={tableRowClass}>
                       <td className={tableCellClass}>{chamado.titulo}</td>
                       <td className={tableCellClass}>
+                        {/* Badge de status */}
                         <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                           chamado.status === 'ABERTO'
                             ? 'bg-green-600 bg-opacity-20 text-green-200'
@@ -178,6 +211,7 @@ const Chamados = () => {
                         </span>
                       </td>
                       <td className={tableCellClass}>
+                        {/* Badge de prioridade */}
                         {(() => {
                           const prioridade = chamado.prioridade?.toLowerCase().trim();
                           let cor = '';
@@ -209,14 +243,17 @@ const Chamados = () => {
                         {new Date(chamado.dataCriacao).toLocaleDateString()}
                       </td>
                       <td className={`${tableCellClass} space-x-3`}>
+                        {/* Botão visualizar */}
                         <button onClick={() => navigate(`/chamados/${chamado.id}`)} className="hover:text-blue-500" title="Visualizar">
                           <FaEye size={18} />
                         </button>
+                        {/* Botão editar (apenas admin) */}
                         {auth.user?.tipo === 'admin' && (
                           <button onClick={() => openEditModal(chamado)} className="hover:text-yellow-500" title="Editar">
                             <FaEdit size={18} />
                           </button>
                         )}
+                        {/* Botão excluir */}
                         <button onClick={() => handleDeleteChamado(chamado.id)} className="hover:text-red-500" title="Excluir">
                           <FaTrash size={18} />
                         </button>
@@ -227,7 +264,7 @@ const Chamados = () => {
               </tbody>
             </table>
 
-            {/* Modal de Edição */}
+            {/* Modal de Edição de chamado */}
             {modalEdit.open && modalEdit.chamado && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-gray-900 p-6 rounded-lg w-96">

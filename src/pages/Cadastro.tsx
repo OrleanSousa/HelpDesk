@@ -4,6 +4,9 @@ import { FaEye, FaEyeSlash, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
 import { toast } from 'react-toastify';
 import { createUser } from '../services';
 
+/**
+ * Interface que representa os dados do novo usuário a ser cadastrado.
+ */
 interface NovoUsuario {
   id: string;
   name: string;
@@ -15,8 +18,17 @@ interface NovoUsuario {
   tipo: string;
 }
 
+/**
+ * Página de Cadastro de Usuário
+ * 
+ * Permite ao administrador cadastrar um novo usuário no sistema.
+ * Possui validação de senha, confirmação de senha, seleção de cargo, setor e tipo de usuário.
+ * Exibe feedback visual para validação e utiliza toast para mensagens de sucesso/erro.
+ */
 const Cadastro = () => {
   const navigate = useNavigate();
+
+  // Estado do formulário de cadastro
   const [form, setForm] = useState<NovoUsuario>({
     id: '',
     name: '',
@@ -27,9 +39,15 @@ const Cadastro = () => {
     setor: '',
     tipo: 'user',
   });
+
+  // Estado para mostrar/ocultar senha
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmarPassword, setShowConfirmarPassworda] = useState(false);
 
+  /**
+   * Manipula o envio do formulário de cadastro.
+   * Valida se as senhas coincidem e chama o serviço de criação de usuário.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirmarPassword) {
@@ -62,8 +80,10 @@ const Cadastro = () => {
             <h2 className="text-2xl font-bold text-white">Cadastrar Novo Usuário</h2>
           </div>
 
+          {/* Formulário de cadastro */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-2 gap-6">
+              {/* Campo Nome */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Nome Completo
@@ -77,6 +97,7 @@ const Cadastro = () => {
                 />
               </div>
 
+              {/* Campo Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Email
@@ -90,41 +111,45 @@ const Cadastro = () => {
                 />
               </div>
 
+              {/* Campo Senha */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Senha
                 </label>
                 <div className="relative">
-                <input
+                  <input
                     type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
-                />
+                  />
+                  {/* Botão para mostrar/ocultar senha */}
                   <button
                     type="button"
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
                     onClick={() => setShowPassword((v) => !v)}
                     tabIndex={-1}
                   >
-                    {showPassword? <FaEyeSlash /> : <FaEye />}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
               </div>
 
+              {/* Campo Confirmar Senha */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Confirmar Senha
                 </label>
                 <div className="relative">
-                <input
+                  <input
                     type={showConfirmarPassword ? "text" : "password"}
-                  value={form.confirmarPassword}
-                  onChange={(e) => setForm({ ...form, confirmarPassword: e.target.value })}
-                  required
+                    value={form.confirmarPassword}
+                    onChange={(e) => setForm({ ...form, confirmarPassword: e.target.value })}
+                    required
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
-                />
+                  />
+                  {/* Botão para mostrar/ocultar confirmação de senha */}
                   <button
                     type="button"
                     className="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -133,6 +158,7 @@ const Cadastro = () => {
                   >
                     {showConfirmarPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
+                  {/* Ícone de validação de senha */}
                   {form.confirmarPassword && (
                     form.password === form.confirmarPassword ? (
                       <FaCheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 text-green-500" />
@@ -143,6 +169,7 @@ const Cadastro = () => {
                 </div>
               </div>
 
+              {/* Campo Cargo */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Cargo
@@ -156,6 +183,7 @@ const Cadastro = () => {
                 />
               </div>
 
+              {/* Campo Setor */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   Setor
@@ -170,6 +198,7 @@ const Cadastro = () => {
               </div>
             </div>
 
+            {/* Seleção do tipo de usuário */}
             <div className="flex items-center">
               <select
                 value={form.tipo}
@@ -181,6 +210,7 @@ const Cadastro = () => {
               </select>
             </div>
 
+            {/* Botões de ação */}
             <div className="flex justify-end space-x-3 pt-6">
               <button
                 type="button"

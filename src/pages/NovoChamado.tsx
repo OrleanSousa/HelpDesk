@@ -5,6 +5,9 @@ import type { RootState } from '../store';
 import { toast } from 'react-toastify';
 import { createChamado } from '../services';
 
+/**
+ * Interface para o formulário de criação de chamado.
+ */
 interface ChamadoForm {
   titulo: string;
   descricao: string;
@@ -13,10 +16,17 @@ interface ChamadoForm {
   assunto: string;
 }
 
+/**
+ * Página de criação de novo chamado.
+ * Permite ao usuário ou administrador abrir um novo chamado no sistema.
+ * O layout e as cores se adaptam conforme o tipo de usuário.
+ */
 const NovoChamado = () => {
+  // Obtém informações do usuário autenticado
   const auth = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
+  // Estado do formulário do chamado
   const [form, setForm] = useState<ChamadoForm>({
     titulo: '',
     descricao: '',
@@ -25,6 +35,10 @@ const NovoChamado = () => {
     assunto: '',
   });
 
+  /**
+   * Manipula o envio do formulário de novo chamado.
+   * Valida os campos obrigatórios e envia para a API.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.user) {
@@ -46,7 +60,6 @@ const NovoChamado = () => {
       data_abertura: new Date().toISOString().slice(0, 10),
     };
 
-  
     try {
       await createChamado(novoChamado);
       setForm({
@@ -69,6 +82,7 @@ const NovoChamado = () => {
     }
   };
 
+  // Classes de estilo dinâmicas conforme o tipo de usuário
   const containerClass = auth.user?.tipo === 'admin'
     ? "flex-1 min-h-screen bg-gray-900 p-6 flex items-center justify-center"
     : "flex-1 min-h-screen bg-gray-50 p-6 flex items-center justify-center";
@@ -98,11 +112,12 @@ const NovoChamado = () => {
           </h2>
         </div>
 
+        {/* Formulário de criação de chamado */}
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div>
             <label className={labelClass}>Título</label>
             <input
-            id='Titulo'
+              id='Titulo'
               type="text"
               value={form.titulo}
               onChange={(e) => setForm({ ...form, titulo: e.target.value })}
@@ -115,7 +130,7 @@ const NovoChamado = () => {
           <div>
             <label className={labelClass}>Descrição</label>
             <textarea
-            id='Descricao'
+              id='Descricao'
               value={form.descricao}
               onChange={(e) => setForm({ ...form, descricao: e.target.value })}
               className={`${inputClass} h-32 resize-none`}
@@ -128,7 +143,7 @@ const NovoChamado = () => {
             <div>
               <label className={labelClass}>Prioridade</label>
               <select
-              id='Prioridade'
+                id='Prioridade'
                 value={form.prioridade}
                 onChange={(e) => setForm({ ...form, prioridade: e.target.value })}
                 className={inputClass}
@@ -142,7 +157,7 @@ const NovoChamado = () => {
             <div>
               <label className={labelClass}>Categoria</label>
               <select
-              id='assunto'
+                id='assunto'
                 value={form.assunto}
                 onChange={e => setForm({ ...form, assunto: e.target.value })}
                 className={inputClass}
@@ -160,6 +175,7 @@ const NovoChamado = () => {
             </div>
           </div>
 
+          {/* Botões de ação */}
           <div className="flex justify-end space-x-4 pt-6">
             <button
               type="button"

@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getUser, updateUser} from '../services';
 
+/**
+ * Interface que representa um usuário do sistema.
+ */
 interface Usuario {
   id: string;
   name: string;
@@ -13,12 +16,21 @@ interface Usuario {
   tipo: string;
 }
 
+/**
+ * Página de edição de usuário.
+ * Permite ao administrador editar os dados de um usuário já cadastrado.
+ * Busca os dados do usuário pelo ID, permite alterar e salvar as informações.
+ */
 const EditarUsuario = () => {
+  // Obtém o ID do usuário da URL
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // Estado para armazenar os dados do usuário
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Estado de carregamento
   const [loading, setLoading] = useState(true);
 
+  // Busca os dados do usuário ao montar o componente ou quando o ID mudar
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -31,6 +43,9 @@ const EditarUsuario = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
+  /**
+   * Manipula mudanças nos campos do formulário.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!usuario) return;
     const { name, value, type } = e.target;
@@ -40,6 +55,10 @@ const EditarUsuario = () => {
     });
   };
 
+  /**
+   * Manipula o envio do formulário de edição.
+   * Atualiza os dados do usuário no backend.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!usuario) return;
@@ -52,6 +71,7 @@ const EditarUsuario = () => {
     }
   };
 
+  // Exibe tela de carregamento enquanto busca os dados
   if (loading || !usuario) {
     return <div className="flex-1 flex items-center justify-center min-h-screen text-white">Carregando usuário...</div>;
   }
@@ -62,6 +82,7 @@ const EditarUsuario = () => {
         <div className="bg-gray-900 p-6">
           <h2 className="text-3xl font-bold text-center text-white">Editar Usuário</h2>
         </div>
+        {/* Formulário de edição de usuário */}
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">Nome</label>
@@ -131,6 +152,7 @@ const EditarUsuario = () => {
               <option value="admin">Administrador</option>
             </select>
           </div>
+          {/* Botões de ação */}
           <div className="flex justify-end gap-2 pt-6">
             <button
               type="button"
@@ -152,4 +174,4 @@ const EditarUsuario = () => {
   );
 };
 
-export default EditarUsuario; 
+export default EditarUsuario;

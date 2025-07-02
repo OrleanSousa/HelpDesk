@@ -3,6 +3,17 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '@/store';
 import { login } from '@/store/slices/authSlice';
 
+/**
+ * Hook customizado useAuth
+ * 
+ * Responsável por fornecer o estado de autenticação do usuário e garantir que,
+ * ao carregar a aplicação, o estado de autenticação seja restaurado do localStorage
+ * (caso o usuário já tenha feito login anteriormente).
+ * 
+ * - Retorna o estado de autenticação (auth) do Redux.
+ * - Ao montar, verifica se há dados salvos no localStorage e, se houver,
+ *   faz o login automático do usuário.
+ */
 export const useAuth = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
@@ -21,4 +32,4 @@ export const useAuth = () => {
   return auth;
 };
 
-export default useAuth; 
+export default useAuth;

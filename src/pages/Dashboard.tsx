@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { FaUsers } from 'react-icons/fa';
 import { getChamados, getUsers } from '../services';
 
+/**
+ * Interface que representa um chamado para exibição no dashboard.
+ */
 interface Chamado {
   id: string;
   titulo: string;
@@ -14,15 +17,24 @@ interface Chamado {
   respostas?: { autorId: string; autorNome: string; mensagem: string; data: string }[];
 }
 
+/**
+ * Página Dashboard
+ * 
+ * Exibe estatísticas gerais do sistema, como quantidade de chamados por status,
+ * usuários ativos/inativos e uma tabela com os chamados mais recentes.
+ * Possui paginação para a tabela de chamados.
+ */
 const Dashboard = () => {
-  
+  // Estado para lista de chamados e usuários
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  // Estados para paginação
+
+  // Estados para paginação dos chamados
   const [paginaAtual, setPaginaAtual] = useState(1);
   const chamadosPorPagina = 4;
 
+  // Carrega chamados e usuários ao montar o componente
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -39,16 +51,17 @@ const Dashboard = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Contadores
+  // Contadores de chamados por status
   const chamadosAbertos = chamados.filter(c => c.status === 'ABERTO').length;
   const chamadosEmAtendimento = chamados.filter(c => c.status === 'EM_ATENDIMENTO').length;
   const chamadosEncerrados = chamados.filter(c => c.status === 'ENCERRADO').length;
   const totalChamados = chamados.length;
 
+  // Contadores de usuários ativos/inativos
   const usuariosAtivos = usuarios.filter(u => u.status === 'ativo').length;
   const usuariosInativos = usuarios.filter(u => u.status === 'inativo').length;
 
-  // Ordenação segura
+  // Ordena chamados por data de criação (mais recentes primeiro)
   const chamadosOrdenados = [...chamados].sort((a, b) => 
     (b.dataCriacao || '').localeCompare(a.dataCriacao || '')
   );
@@ -59,7 +72,7 @@ const Dashboard = () => {
   const chamadosPaginados = chamadosOrdenados.slice(indexPrimeiroChamado, indexUltimoChamado);
   const totalPaginas = Math.ceil(chamadosOrdenados.length / chamadosPorPagina);
 
-  // Busca nome do usuário
+  // Busca nome do usuário pelo ID
   const getNomeUsuario = (id: string) => {
     const user = usuarios.find(u => String(u.id) === String(id));
     return user?.name || `ID: ${id}`;
@@ -70,7 +83,7 @@ const Dashboard = () => {
       <div className="w-full max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold text-white mb-6">Dashboard</h2>
 
-        {/* Cards principais */}
+        {/* Cards principais de status dos chamados */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           {[
             { label: 'Abertos', value: chamadosAbertos, color: 'blue' },
@@ -85,7 +98,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Usuários */}
+        {/* Cards de usuários ativos/inativos */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           {[
             { label: 'Usuários Ativos', value: usuariosAtivos, color: 'green' },
@@ -102,7 +115,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Tabela */}
+        {/* Tabela de chamados recentes */}
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <div className="p-6 border-b border-gray-700">
             <h3 className="text-xl font-semibold text-white">Chamados Recentes</h3>
@@ -153,7 +166,7 @@ const Dashboard = () => {
               )}
             </tbody>
           </table>
-          {/* Paginação UX/UI melhorada */}
+          {/* Paginação da tabela de chamados */}
           {totalPaginas > 1 && (
             <div
               className="flex justify-center items-center gap-4 px-6 py-4 border-t border-gray-700 bg-gray-800 rounded-b-lg"

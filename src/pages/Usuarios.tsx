@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { deleteUser, getUsers, updateUser } from '@/services';
-
 import { FaEdit, FaTrash, FaUserPlus } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 
+/**
+ * Interface que representa um usuário do sistema.
+ */
 interface Usuario {
   id: string;
   name: string;
@@ -14,14 +16,23 @@ interface Usuario {
   tipo: string;
 }
 
+/**
+ * Página de listagem e gerenciamento de usuários.
+ * Permite visualizar, editar, deletar e cadastrar novos usuários.
+ * Possui paginação e modal para edição rápida.
+ */
 const Usuarios = () => {
+  // Estado para lista de usuários
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  // Estado para usuário selecionado no modal de edição
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<Usuario | null>(null);
+  // Estado para controle de exibição do modal
   const [modalAberto, setModalAberto] = useState(false);
+  // Estado para paginação
   const [paginaAtual, setPaginaAtual] = useState(1);
   const usuariosPorPagina = 10;
- 
 
+  // Carrega usuários ao montar o componente
   useEffect(() => {
     const carregarUsuarios = async () => {
       const resposta = await getUsers();
@@ -32,17 +43,23 @@ const Usuarios = () => {
     carregarUsuarios();
   }, []);
 
-  // Paginação
+  // Paginação: calcula os índices dos usuários da página atual
   const indexUltimoUsuario = paginaAtual * usuariosPorPagina;
   const indexPrimeiroUsuario = indexUltimoUsuario - usuariosPorPagina;
   const usuariosPaginados = usuarios.slice(indexPrimeiroUsuario, indexUltimoUsuario);
   const totalPaginas = Math.ceil(usuarios.length / usuariosPorPagina);
 
+  /**
+   * Abre o modal de edição para o usuário selecionado.
+   */
   const handleAbrirModal = (usuario: Usuario) => {
     setUsuarioSelecionado(usuario);
     setModalAberto(true);
   };
 
+  /**
+   * Deleta um usuário do sistema.
+   */
   const handleDeletarUsuario = async (id: string) => {
     try {
       await deleteUser(id);
@@ -52,6 +69,9 @@ const Usuarios = () => {
     }
   };
 
+  /**
+   * Salva as alterações do usuário editado no modal.
+   */
   const handleSalvarUsuario = async () => {
     if (!usuarioSelecionado) return;
 
@@ -78,6 +98,7 @@ const Usuarios = () => {
   return (
     <div className="flex-1 min-h-screen bg-gray-900 p-6">
       <div className="w-full max-w-7xl mx-auto">
+        {/* Header com título e botão de novo usuário */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-white">Usuários</h2>
           <Link
@@ -88,6 +109,7 @@ const Usuarios = () => {
             Novo Usuário
           </Link>
         </div>
+        {/* Tabela de usuários */}
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
@@ -108,6 +130,7 @@ const Usuarios = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.cargo}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{usuario.setor}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {/* Select para alterar status do usuário */}
                     <select
                       value={usuario.status}
                       onChange={async (e) => {
@@ -130,7 +153,9 @@ const Usuarios = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                     <div className="flex justify-center space-x-2">
+                      {/* Botão para abrir modal de edição */}
                       <button onClick={() => handleAbrirModal(usuario)} className="p-1 hover:bg-gray-600 rounded"><FaEdit className="text-gray-300 hover:text-white" /></button>
+                      {/* Botão para deletar usuário */}
                       <button onClick={() => handleDeletarUsuario(usuario.id)} className="p-1 hover:bg-gray-600 rounded"><FaTrash className="text-gray-300 hover:text-white" /></button>
                     </div>
                   </td>

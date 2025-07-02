@@ -2,11 +2,15 @@ import api from './api';
 import endpoints from './endpoints';
 import type { User } from '../types';
 
-// Auth
+/**
+ * Serviços de autenticação
+ */
 export const login = (data: any) => api.post(endpoints.login, data);
 export const logout = () => api.post(endpoints.logout);
 
-// Users
+/**
+ * Serviços de usuários
+ */
 export const getUsers = () => api.get<User[]>(endpoints.users);
 export const getUser = (id: number | string) => api.get<User>(endpoints.user(id));
 export const createUser = (data: User) => api.post(endpoints.users, data);
@@ -14,7 +18,9 @@ export const updateUser = (id: number | string, data: Partial<User>) =>
   api.put(endpoints.user(id), data);
 export const deleteUser = (id: number | string) => api.delete(endpoints.user(id));
 
-// Chamados
+/**
+ * Serviços de chamados
+ */
 export const getChamados = () => api.get(endpoints.chamados);
 export const getChamado = (id: number | string) => api.get(endpoints.chamado(id));
 export const createChamado = (data: any) => api.post(endpoints.chamadoCreate, data);
@@ -27,13 +33,19 @@ export const closeChamado = (id: number | string) =>
 export const getChamadoStats = () => api.get(endpoints.chamadoStats);
 export const createChamadoResponse = (data: any) =>
   api.post(endpoints.chamadoResponse, data);
-// NOVO: Buscar respostas de um chamado específico
+/**
+ * Buscar respostas de um chamado específico
+ */
 export const getChamadoResponses = (id: number | string) =>
   api.get(`/api/called/${id}/responses`);
 
-// Relatórios
+/**
+ * Serviços de relatórios
+ */
 export const getReport = () => api.get(endpoints.report, { responseType: 'blob' });
 
-// Chamados por status
+/**
+ * Buscar chamados por status
+ */
 export const getChamadosByStatus = (status: string) =>
   api.get(endpoints.chamadosByStatus(status));

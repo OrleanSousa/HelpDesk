@@ -4,7 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { login as loginAction } from '../store/slices/authSlice';
 import { login as loginApi } from '../services';
 
+/**
+ * Página de Login
+ * 
+ * Permite ao usuário acessar o sistema informando email e senha.
+ * Realiza autenticação via API, armazena o usuário autenticado no Redux
+ * e redireciona conforme o tipo de usuário (admin ou usuário comum).
+ */
 const Login = () => {
+  // Estado para email, senha e mensagem de erro
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,6 +20,10 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  /**
+   * Manipula o envio do formulário de login.
+   * Realiza autenticação na API e salva usuário no Redux.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -45,6 +57,7 @@ const Login = () => {
           </p>
         </div>
         
+        {/* Formulário de login */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
